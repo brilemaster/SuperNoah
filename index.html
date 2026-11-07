@@ -22,7 +22,16 @@ canvas{display:block;background:#7ec8ff;touch-action:none}
 #top button.off{opacity:.45}
 #rotate{position:fixed;inset:0;background:#2b2d6e;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:bold 28px system-ui,sans-serif;z-index:10;padding:24px;line-height:1.4}
 @media (orientation:portrait) and (pointer:coarse){#rotate{display:flex}}
-@media (max-height:500px){.btn{width:62px;height:62px;font-size:24px}.btn.big{width:76px;height:76px}.btn small{font-size:10px}.ctl{gap:12px;bottom:max(8px,env(safe-area-inset-bottom))}#top button{font-size:16px;padding:3px 7px;min-width:38px}}
+@media (max-height:500px){
+  .btn{width:52px;height:52px;font-size:19px;border-width:2px;background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.55);box-shadow:none}
+  .btn.big{width:58px;height:58px;background:rgba(255,200,60,.28)}
+  .btn[data-k=shell]{width:46px;height:46px;font-size:16px}
+  .btn small{font-size:8px;letter-spacing:.5px}
+  .btn.on{background:rgba(255,255,255,.5)}
+  .ctl{gap:8px;bottom:max(5px,env(safe-area-inset-bottom))}
+  .ctl.left{left:max(6px,env(safe-area-inset-left))}
+  .ctl.right{right:max(6px,env(safe-area-inset-right))}
+  #top button{font-size:15px;padding:2px 6px;min-width:34px}}
 </style>
 </head>
 <body>
