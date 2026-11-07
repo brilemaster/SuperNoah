@@ -18,8 +18,9 @@ canvas{display:block;background:#7ec8ff;touch-action:none}
 .btn.big{width:98px;height:98px;background:rgba(255,200,60,.45)}
 .btn.on{background:rgba(255,255,255,.6);transform:scale(.94)}
 
-.vstack{display:flex;flex-direction:column;gap:6px;justify-content:flex-end}
-.vstack .btn{width:62px;height:50px;border-radius:16px;font-size:24px}
+.ctl.left.dpad{display:grid!important;grid-template-columns:repeat(3,auto);grid-template-areas:". up ." "left down right";gap:6px}
+.dpad [data-k=left]{grid-area:left}.dpad [data-k=right]{grid-area:right}.dpad [data-k=up]{grid-area:up}.dpad [data-k=down]{grid-area:down}
+.dpad .btn{width:66px;height:58px;border-radius:16px;font-size:26px}
 #top{position:fixed;top:max(8px,env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));z-index:6;display:flex;gap:8px}
 #top button{background:rgba(10,12,40,.55);color:#fff;border:2px solid rgba(255,255,255,.55);border-radius:12px;font-size:20px;padding:5px 9px;min-width:46px}
 #top button.off{opacity:.45}
@@ -34,13 +35,13 @@ canvas{display:block;background:#7ec8ff;touch-action:none}
   .ctl{gap:8px;bottom:max(5px,env(safe-area-inset-bottom))}
   .ctl.left{left:max(6px,env(safe-area-inset-left))}
   .ctl.right{right:max(6px,env(safe-area-inset-right))}
-  .vstack{gap:4px}.vstack .btn{width:46px;height:36px;border-radius:12px;font-size:16px}
+  .ctl.left.dpad{gap:4px}.dpad .btn{width:48px;height:40px;border-radius:12px;font-size:17px}
   #top button{font-size:15px;padding:2px 6px;min-width:34px}}
 </style>
 </head>
 <body>
 <div id="wrap"><canvas id="c"></canvas></div>
-<div class="ctl left"><div class="btn" data-k="left">◀</div><div class="btn" data-k="right">▶</div><div class="vstack"><div class="btn" data-k="up" id="upBtn" style="display:none;background:rgba(142,92,247,.55)">▲</div><div class="btn" data-k="down" id="downBtn" style="display:none;background:rgba(142,92,247,.55)">▼</div></div></div>
+<div class="ctl left" id="leftCtl"><div class="btn" data-k="left">◀</div><div class="btn" data-k="up" id="upBtn" style="display:none;background:rgba(142,92,247,.55)">▲</div><div class="btn" data-k="right">▶</div><div class="btn" data-k="down" id="downBtn" style="display:none;background:rgba(142,92,247,.55)">▼</div></div>
 <div class="ctl right"><div class="btn" data-k="shell">🐢<small>SPIN</small></div><div class="btn big" data-k="jump">⬆</div></div>
 <div id="top"><button id="voice" aria-label="Read story aloud">🗣️</button><button id="mute" aria-label="Sound on or off">🔊</button></div>
 <div id="rotate">🔄<br>Turn your device sideways<br>to play Super Noah!</div>
@@ -82,8 +83,8 @@ const ctlEls=[...document.querySelectorAll('.ctl')];let ctlShown=false;
 function syncCtl(){const show=isTouch&&state==='play';if(show!==ctlShown){ctlShown=show;ctlEls.forEach(el=>el.style.display=show?'flex':'none');
   if(!show){for(const k in inp)inp[k]=false;document.querySelectorAll('.btn').forEach(b=>b.classList.remove('on'));}}}
 const downBtn=document.getElementById('downBtn'),upBtn=document.getElementById('upBtn');let downShown=false,upShown=false;
-function syncDown(){const fly=state==='play'&&L&&L.def.fly;const want=isTouch&&state==='play'&&(!!P.onTube||fly);if(want!==downShown){downShown=want;downBtn.style.display=want?'flex':'none';if(!want){inp.down=false;downBtn.classList.remove('on');}}
-  const wu=isTouch&&fly;if(wu!==upShown){upShown=wu;upBtn.style.display=wu?'flex':'none';if(!wu){inp.up=false;upBtn.classList.remove('on');}}}
+function syncDown(){const fly=state==='play'&&L&&L.def.fly;const want=isTouch&&state==='play'&&!!P.onTube;if(want!==downShown){downShown=want;downBtn.style.display=want?'flex':'none';if(!want){inp.down=false;downBtn.classList.remove('on');}}
+  const wu=false;document.getElementById('leftCtl').classList.toggle('dpad',!!wu);if(wu!==upShown){upShown=wu;upBtn.style.display=wu?'flex':'none';if(!wu){inp.up=false;upBtn.classList.remove('on');}}}
 document.querySelectorAll('.btn').forEach(b=>{const k=b.dataset.k;
   const on=e=>{e.preventDefault();if(k==='jump')userGo();inp[k]=true;b.classList.add('on');try{b.setPointerCapture(e.pointerId);}catch(_){}};
   const off=e=>{e.preventDefault();inp[k]=false;b.classList.remove('on');};
@@ -1106,7 +1107,7 @@ function drawCard(){const d=L.def,t=THEMES[d.theme];drawBG(d.theme,stateT*1.5,fr
       :['← → walk   ·   SPACE jump   ·   X = Truupa Spin!','Double-tap → to ZOOM super fast!','Jump on the Grumble Goons to bop them','Hit the ⚡ crates for power bolts and grow BIG!','Jump over nuts or blast them with Truupa Spin!'];
     L2.forEach((s,i)=>txt(s,W/2,176+i*29,i===0?21:19,'#22243f','center',null));}
   if(d.fly){rr(W/2-340,124,680,150,18);ctx.fillStyle='rgba(255,255,255,.94)';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#2b2d6e';ctx.stroke();
-    txt('FLYING LEVEL!',W/2,152,26,'#e0614f','center',null);txt(isTouch?'Use ▲ ▼ to fly up and down (or hold ⬆)':'Hold SPACE or ↑ to fly up · ↓ to dive down',W/2,192,21,'#22243f','center',null);
+    txt('FLYING LEVEL!',W/2,152,26,'#e0614f','center',null);txt(isTouch?'Hold ⬆ to fly up · let go to float down':'Hold SPACE to fly up · let go to float down',W/2,192,21,'#22243f','center',null);
     txt('Watch out for the zappy storm clouds!',W/2,226,19,'#22243f','center',null);txt('Truupa Spin can blast them!',W/2,254,19,'#22243f','center',null);}
   if(stateT>30)bigButton(topL?W-290:W/2-110,topL?380:300,topL?240:220,topL?66:60,first?'START ▶':"LET'S GO ▶");}
 function drawTitle(){drawBG('meadow',frame*.6,frame);
