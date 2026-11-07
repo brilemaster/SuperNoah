@@ -22,6 +22,7 @@ canvas{display:block;background:#7ec8ff;touch-action:none}
 #top button.off{opacity:.45}
 #rotate{position:fixed;inset:0;background:#2b2d6e;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:bold 28px system-ui,sans-serif;z-index:10;padding:24px;line-height:1.4}
 @media (orientation:portrait) and (pointer:coarse){#rotate{display:flex}}
+@media (max-height:500px){.btn{width:62px;height:62px;font-size:24px}.btn.big{width:76px;height:76px}.btn small{font-size:10px}.ctl{gap:12px;bottom:max(8px,env(safe-area-inset-bottom))}#top button{font-size:16px;padding:3px 7px;min-width:38px}}
 </style>
 </head>
 <body>
@@ -37,11 +38,12 @@ canvas{display:block;background:#7ec8ff;touch-action:none}
    An original platformer made with love for Noah & JoJo.
    ========================================================= */
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
-const W=960,H=544,T=32,ROWS=17;
+let W=960;const H=544,T=32,ROWS=17;
 let RES=1;
-function fit(){const s=Math.min(innerWidth/W,innerHeight/H);cv.style.width=(W*s)+'px';cv.style.height=(H*s)+'px';
+function fit(){const vw=window.visualViewport?visualViewport.width:innerWidth,vh=window.visualViewport?visualViewport.height:innerHeight;
+  W=Math.round(Math.min(1300,Math.max(960,H*vw/vh)));const s=Math.min(vw/W,vh/H);cv.style.width=(W*s)+'px';cv.style.height=(H*s)+'px';
   RES=Math.min(2.5,Math.max(1,s*(window.devicePixelRatio||1)));cv.width=Math.round(W*RES);cv.height=Math.round(H*RES);}
-addEventListener('resize',fit);fit();
+addEventListener('resize',fit);addEventListener('orientationchange',()=>setTimeout(fit,250));if(window.visualViewport)visualViewport.addEventListener('resize',fit);fit();
 
 const store={get(k,d){try{const v=localStorage.getItem('superNoah_'+k);return v===null?d:JSON.parse(v);}catch(e){return d;}},
              set(k,v){try{localStorage.setItem('superNoah_'+k,JSON.stringify(v));}catch(e){}}};
@@ -566,7 +568,7 @@ function loadLevel(i){lvlIdx=i;const def=LEVELS[i];const b=def.build();
       case 'end':L.end={x:px,y:py};break;
       case 'boss':L.boss={x:px,y:py,w:96,h:72,hp:3,st:'wait',t:0,dir:-1,inv:0,active:false,started:false,tx:0};break;}}
   P.h=P.big?50:34;P.w=P.big?24:22;
-  Object.assign(P,{x:2*T+5,y:14*T-P.h,vx:0,vy:0,face:1,hearts:5,inv:0,jumping:false,buf:0,coy:0,dash:0,growT:0});
+  Object.assign(P,{x:5*T+5,y:14*T-P.h,vx:0,vy:0,face:1,hearts:5,inv:0,jumping:false,buf:0,coy:0,dash:0,growT:0});
   P.safe={x:P.x,fy:14*T};L.check={x:P.x,fy:14*T};
   Object.assign(R,{x:P.x-34,y:14*T-30,vx:0,vy:0,mode:'walk',face:1});
   J.x=P.x-40;J.y=P.y-30;J.sayT=0;J.heartT=0;cam.x=0;parts=[];}
@@ -616,7 +618,7 @@ function stepPlay(){
   if(goL){P.face=-1;P.vx=P.vx<-max?Math.min(-max,P.vx*.93):Math.max(P.vx-acc,-max);}
   else if(goR){P.face=1;P.vx=P.vx>max?Math.max(max,P.vx*.93):Math.min(P.vx+acc,max);}
   else{P.vx*=P.onG?.7:.94;if(Math.abs(P.vx)<.08)P.vx=0;}
-  if(dashing&&frame%3===0)parts.push({kind:'ghost',x:P.x+P.w/2,y:P.y+P.h,s:P.big?.98:.68,face:P.face,walk:P.anim,air:!P.onG,life:14});
+  if(dashing&&frame%3===0)parts.push({kind:'ghost',x:P.x+P.w/2,y:P.y+P.h,s:P.big?1.02:.76,face:P.face,walk:P.anim,air:!P.onG,life:14});
   if(pressed('jump'))P.buf=8;else if(P.buf>0)P.buf--;
   if(P.onG)P.coy=7;else if(P.coy>0)P.coy--;
   if(P.buf>0&&P.coy>0){P.vy=-12.5;P.buf=0;P.coy=0;P.jumping=true;sfx('jump');}
@@ -887,15 +889,15 @@ function drawWorld(){const th=L.def.theme;drawBG(th,cam.x,frame);
       drawGrumble(b.x+48,b.y+44+(b.st==='float'||b.st==='wait'?Math.sin(frame*.06)*5:0),.85,mood);
       if(b.st==='tired'){for(let i=0;i<3;i++){const a=frame*.08+i*2.1;drawStar(b.x+48+Math.cos(a)*30,b.y-12+Math.sin(a)*8,6,a);}txt('z z z',b.x+84,b.y-30-Math.sin(frame*.05)*4,18,'#fff','center');}}}
   for(const e of L.ents)drawEnemy(e);
-  if(R.mode==='walk')drawTruupa(R.x+R.w/2,R.y+R.h,.68,R.face,{walk:R.anim,run:Math.abs(R.vx)>.5&&R.onG,cheer:state==='clear'});
+  if(R.mode==='walk')drawTruupa(R.x+R.w/2,R.y+R.h,.74,R.face,{walk:R.anim,run:Math.abs(R.vx)>.5&&R.onG,cheer:state==='clear'});
   else drawTruupa(R.sx,R.sy,.95,1,{spin:true,rot:R.rot});
   if(P.dash>0){ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.beginPath();for(let i=0;i<4;i++){const ly=P.y+8+i*(P.h/4),lx=P.x+P.w/2-P.face*(22+((frame*7+i*13)%24));ctx.moveTo(lx,ly);ctx.lineTo(lx-P.face*22,ly);}ctx.stroke();}
   const blink=P.inv>0&&Math.floor(P.inv/4)%2===0&&state==='play';
   const hop=state==='clear'?-Math.abs(Math.sin(stateT*.15))*34:0;
-  let sc=P.big?.98:.68;if(P.growT>0&&Math.floor(P.growT/4)%2)sc=P.big?.68:.98;
+  let sc=P.big?1.02:.76;if(P.growT>0&&Math.floor(P.growT/4)%2)sc=P.big?.76:1.02;
   if(!blink)drawNoah(P.x+P.w/2,P.y+P.h+hop,sc,P.face,{walk:P.anim,run:P.onG&&Math.abs(P.vx)>.5,air:!P.onG||hop<0,cheer:state==='clear'||state==='note'});
   if(bubbleFx>0){ctx.globalAlpha=bubbleFx/60;ctx.strokeStyle='#bfe6ff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(P.x+P.w/2,P.y+P.h/2-2,P.h*.8,0,Math.PI*2);ctx.stroke();circ(P.x+P.w/2,P.y+P.h/2-2,P.h*.8,'rgba(160,215,255,.25)');ctx.globalAlpha=1;}
-  drawJoJo(J.x,J.y+Math.sin(frame*.07)*3,1,P.face,{bubble:true,cheer:J.sayT>0||state==='clear'});
+  drawJoJo(J.x,J.y+Math.sin(frame*.07)*3,1.1,P.face,{bubble:true,cheer:J.sayT>0||state==='clear'});
   drawParts();drawSay();
   ctx.restore();drawHUD();
   if(state==='clear'){bigText('WORLD CLEAR!',W/2,180,64,['#fff6a8','#ffcf3a','#ff7a1a']);txt('Great job, Super Noah!',W/2,248,30,'#fff');}
@@ -930,24 +932,28 @@ function drawHouse(x,gy){rr(x,gy-150,210,150,2);fs('#ffe3b3',2.5);ctx.beginPath(
 function confetti(){const cols=['#ff5c8a','#ffd23f','#4aa3ff','#43a047','#8e24aa','#fb8c00'];for(let i=0;i<60;i++){const x=wrap(i*97+frame*(.5+i%3*.4),W),y=wrap(i*53+frame*(1.2+(i%4)*.4),H);
   ctx.save();ctx.translate(x,y);ctx.rotate(frame*.05+i);rect(-4,-2,8,4,cols[i%6]);ctx.restore();}}
 function sceneGround(c1,c2){rect(0,385,W,H-385,c1);rect(0,385,W,7,c2);rect(0,384,W,2,OL);}
-function drawScene(n,who){const tb=w=>who===w?-Math.abs(Math.sin(frame*.25))*6:0;const bob=Math.sin(frame*.06)*8,talk=w=>who===w;
-  if(n.startsWith('home')||n==='grab'){drawBG('meadow',frame*.4,frame);sceneGround('#5ec95a','#8bee6f');drawHouse(40,385);
-    if(n==='grab'){const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'rgba(20,18,60,.75)');g.addColorStop(1,'rgba(20,18,60,.35)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+function drawScene(n,who){const OX=(W-960)/2;ctx.save();drawSceneInner(n,who,OX);ctx.restore();if(n==='homeEnd')confetti();}
+function drawSceneInner(n,who,OX){const tb=w=>who===w?-Math.abs(Math.sin(frame*.25))*6:0;const bob=Math.sin(frame*.06)*8,talk=w=>who===w;
+  if(n.startsWith('home')||n==='grab'){drawBG('meadow',frame*.4,frame);sceneGround('#5ec95a','#8bee6f');
+    if(n==='grab'){drawHouse(40+OX,385);const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'rgba(20,18,60,.75)');g.addColorStop(1,'rgba(20,18,60,.35)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
       ctx.strokeStyle='rgba(190,210,255,.5)';ctx.lineWidth=1.5;ctx.beginPath();for(let i=0;i<60;i++){const x=wrap(i*97-frame*3,W+40)-20,y=wrap(i*53+frame*10,H);ctx.moveTo(x,y);ctx.lineTo(x-5,y+16);}ctx.stroke();
       if(frame%150<5){ctx.fillStyle='rgba(255,255,255,.4)';ctx.fillRect(0,0,W,H);}
+      ctx.translate(OX,0);
       drawMama(380,385+tb('Mama'),2,1,{cheer:true});drawNoah(490,385,2.2,1,{plain:true});drawJoJo(570,385,2.2,1,{});
       const gx=760+Math.sin(frame*.03)*30,gy=150+bob+tb('Captain Grumble');
       ctx.strokeStyle='#ffe14d';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(gx,gy+50);ctx.lineTo(gx-6,gy+62);ctx.lineTo(gx+4,gy+66);ctx.lineTo(gx,gy+80);ctx.stroke();
       drawCage(gx,gy+124+tb('Papa Mario')*.5,.9);drawGrumble(gx,gy,1.5,'angry');}
+    if(n==='homeEnd'){ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(40,50);ctx.quadraticCurveTo(W/2,110,W-40,50);ctx.stroke();
+      const fc=['#ff5c8a','#ffd23f','#4aa3ff','#43a047'];for(let i=0;i<14;i++){const t=(i+.5)/14,x=40+(W-80)*t,y=50+(1-Math.pow(2*t-1,2))*30;ctx.beginPath();ctx.moveTo(x-10,y);ctx.lineTo(x+10,y);ctx.lineTo(x,y+20);ctx.closePath();fs(fc[i%4],1.2);}
+      rr(W/2-190,98,380,62,18);fs(cape(),3);bigText('SUPER NOAH!',W/2,130,40,['#ffffff','#fff2b0']);}
+    if(n!=='grab'){ctx.translate(OX,0);drawHouse(40,385);}
     if(n==='homeAll'){drawPapa(350,385+tb('Papa Mario'),2,1,{wave:talk('Papa Mario')});drawMama(440,385+tb('Mama'),2,1,{});drawNoah(550,385+tb('Noah'),2.2,-1,{plain:true});drawJoJo(630,385+tb('JoJo'),2.2,-1,{});}
     if(n==='homeKids'){drawMama(380,385+tb('Mama'),2,1,{wave:talk('Mama')});drawNoah(500,385+tb('Noah'),2.2,-1,{fist:talk('Noah'),wind:true});
       drawJoJo(585,385+tb('JoJo'),2.2,-1,{cheer:true});drawTruupa(680,385+tb('Truupa'),2.2,-1,{thumbs:talk('Truupa')});}
-    if(n==='homeEnd'){ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(40,50);ctx.quadraticCurveTo(W/2,110,W-40,50);ctx.stroke();
-      const fc=['#ff5c8a','#ffd23f','#4aa3ff','#43a047'];for(let i=0;i<14;i++){const t=(i+.5)/14,x=40+(W-80)*t,y=50+(1-Math.pow(2*t-1,2))*30;ctx.beginPath();ctx.moveTo(x-10,y);ctx.lineTo(x+10,y);ctx.lineTo(x,y+20);ctx.closePath();fs(fc[i%4],1.2);}
-      rr(W/2-190,98,380,62,18);fs(cape(),3);bigText('SUPER NOAH!',W/2,130,40,['#ffffff','#fff2b0']);
+    if(n==='homeEnd'){
       drawPapa(300,385+tb('Papa Mario'),2,1,{cheer:true});drawMama(385,385+tb('Mama'),2,1,{cheer:true});drawNoah(480,385+tb('Noah'),2.2,1,{cheer:true});
-      drawJoJo(560,385+tb('JoJo'),2.2,1,{cheer:true});drawTruupa(640,385+tb('Truupa'),2.2,1,{cheer:true});drawGrumble(810,230+bob,1.3,'happy');confetti();}}
-  else{drawBG('castle',0,frame);sceneGround('#3c3f52','#6c7088');
+      drawJoJo(560,385+tb('JoJo'),2.2,1,{cheer:true});drawTruupa(640,385+tb('Truupa'),2.2,1,{cheer:true});drawGrumble(810,230+bob,1.3,'happy');}}
+  else{drawBG('castle',0,frame);sceneGround('#3c3f52','#6c7088');ctx.translate(OX,0);
     if(n==='castle'){drawTruupa(170,385+tb('Truupa'),2.2,1,{thumbs:talk('Truupa')});drawNoah(270,385+tb('Noah'),2.2,1,{fist:talk('Noah'),wind:true});drawJoJo(90,320+bob+tb('JoJo'),2.1,1,{bubble:true,cheer:talk('JoJo')});
       drawGrumble(610,200+bob+tb('Captain Grumble'),1.7,'angry');drawCage(855,190+tb('Papa Mario')*.5,1.5);}
     if(n==='castleSad'){drawTruupa(170,385,2.2,1,{});drawNoah(270,385+tb('Noah'),2.2,1,{});drawJoJo(90,320+bob+tb('JoJo'),2.1,1,{bubble:true,cheer:talk('JoJo')});
@@ -967,7 +973,7 @@ function drawCard(){const d=L.def,t=THEMES[d.theme];drawBG(d.theme,stateT*1.5,fr
   const first=lvlIdx===0;bigText('WORLD '+(lvlIdx+1),W/2,first?50:140,first?46:70,['#fff6a8','#ffcf3a','#ff7a1a']);txt(d.name,W/2,first?94:212,first?26:38,'#fff');
   const rx=(first?300:W/2-60)+Math.sin(frame*.05)*20;
   drawTruupa(rx-60,455,1.5,1,{run:true,walk:frame*.3});drawNoah(rx+40,455,1.55,1,{run:true,walk:frame*.3});drawJoJo(rx-130,410+Math.sin(frame*.08)*6,1.5,1,{bubble:true,cheer:true});
-  if(first){rr(130,116,700,196,18);ctx.fillStyle='rgba(255,255,255,.94)';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#2b2d6e';ctx.stroke();
+  if(first){rr(W/2-350,116,700,196,18);ctx.fillStyle='rgba(255,255,255,.94)';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#2b2d6e';ctx.stroke();
     txt('How to play',W/2,142,24,'#e0614f','center',null);
     const L2=isTouch?['◀ ▶ walk   ·   ⬆ jump   ·   🐢 SPIN = Truupa Spin!','Double-tap ▶ to ZOOM super fast!','Jump on the Grumble Goons to bop them','Hit the ⚡ crates for power bolts and grow BIG!','Watch out for nuts and spiky plants!']
       :['← → walk   ·   SPACE jump   ·   X = Truupa Spin!','Double-tap → to ZOOM super fast!','Jump on the Grumble Goons to bop them','Hit the ⚡ crates for power bolts and grow BIG!','Watch out for nuts and spiky plants!'];
