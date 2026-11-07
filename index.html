@@ -293,10 +293,10 @@ function drawJoJo(x,y,s,face,o){o=o||{};ctx.save();ctx.translate(x,y);ctx.scale(
   if(o.bubble){ctx.strokeStyle='rgba(255,255,255,.9)';ctx.lineWidth=1.3;ctx.beginPath();ctx.arc(0,-16,19,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(0,-16,15,Math.PI*1.1,Math.PI*1.45);ctx.stroke();}
   ctx.restore();}
 
-function drawMama(x,y,s,face,o){o=o||{};ctx.save();ctx.translate(x,y);ctx.scale(s*(face||1),s);
+function drawMama(x,y,s,face,o){o=o||{};ctx.save();ctx.translate(x+(o.scared?Math.sin(frame*1.7)*1.5:0),y);ctx.scale(s*(face||1),s);
   const HM='#3a2213',D='#9b5de5';
-  ctx.beginPath();ctx.moveTo(-8.5,-55);ctx.quadraticCurveTo(-13,-44,-10,-36);ctx.quadraticCurveTo(0,-33,10,-36);ctx.quadraticCurveTo(12.5,-46,8.5,-55);ctx.closePath();fs(HM);
-  const ab=o.cheer?2.7:(o.hug?-1.2:.25),af=o.cheer?-2.7:(o.wave?-2.5+Math.sin(frame*.2)*.3:(o.hug?-1.3:-.2));
+  ctx.beginPath();ctx.moveTo(-8.5,-56);ctx.quadraticCurveTo(-11.8,-50,-10.6,-45.4);ctx.quadraticCurveTo(-13.2,-43.6,-11.4,-42.2);ctx.quadraticCurveTo(-8,-43.4,-6,-45);ctx.lineTo(6,-45);ctx.quadraticCurveTo(8,-43.4,11.4,-42.2);ctx.quadraticCurveTo(13.2,-43.6,10.6,-45.4);ctx.quadraticCurveTo(11.8,-50,8.5,-56);ctx.closePath();fs(HM);
+  const ab=o.scared?2.35:(o.cheer?2.7:(o.hug?-1.2:.25)),af=o.scared?-2.35:(o.cheer?-2.7:(o.wave?-2.5+Math.sin(frame*.2)*.3:(o.hug?-1.3:-.2)));
   limb(-5,-43,ab,15,3.6,shade(D,-.2),SKIN,3.5);
   limb(-2.6,-16,0,14,3.4,SKIN,'#6a3aa0',3,1);limb(2.6,-16,0,14,3.4,SKIN,'#6a3aa0',3,1);
   ctx.beginPath();ctx.moveTo(-6,-46);ctx.lineTo(6,-46);ctx.lineTo(6.5,-35);ctx.quadraticCurveTo(10,-25,13.5,-14.5);ctx.quadraticCurveTo(0,-11,-13.5,-14.5);ctx.quadraticCurveTo(-10,-25,-6.5,-35);ctx.closePath();fs(D);
@@ -306,11 +306,16 @@ function drawMama(x,y,s,face,o){o=o||{};ctx.save();ctx.translate(x,y);ctx.scale(
   ctx.beginPath();ctx.moveTo(-3,-46);ctx.lineTo(0,-42.5);ctx.lineTo(3,-46);ctx.closePath();ctx.fillStyle=SKIN;ctx.fill();
   rect(-1.6,-49,3.2,3.5,SKIN);
   ctx.beginPath();ctx.arc(0,-53.5,7.4,0,Math.PI*2);fs(SKIN);
-  ctx.beginPath();ctx.arc(0,-54.3,7.9,Math.PI,Math.PI*2);ctx.quadraticCurveTo(6,-52,4.5,-50);ctx.quadraticCurveTo(3,-55,-1,-56);ctx.quadraticCurveTo(-5,-55,-7.9,-50);ctx.closePath();fs(HM);
-  circ(-2.6,-53,1.1,'#15152b');circ(2.8,-53,1.1,'#15152b');circ(-2.2,-53.4,.4,'#fff');circ(3.2,-53.4,.4,'#fff');
+  ctx.beginPath();ctx.arc(0,-54.3,7.9,Math.PI,Math.PI*2);ctx.quadraticCurveTo(6,-52,4.5,-50);ctx.quadraticCurveTo(3,-55,-1,-56);ctx.quadraticCurveTo(-5,-55,-7.9,-50);ctx.closePath();fs(HM);ctx.strokeStyle=OL;ctx.lineWidth=2.6;ctx.lineCap='round';ctx.beginPath();ctx.arc(0,-54.3,7.6,Math.PI*1.12,Math.PI*1.88);ctx.stroke();ctx.strokeStyle='#ff7eb6';ctx.lineWidth=1.5;ctx.stroke();
+  if(o.scared){ctx.beginPath();ctx.ellipse(-2.6,-53,1.9,2.3,0,0,Math.PI*2);fs('#fff',.7);ctx.beginPath();ctx.ellipse(2.8,-53,1.9,2.3,0,0,Math.PI*2);fs('#fff',.7);
+    circ(-2.6,-52.8,.75,'#15152b');circ(2.8,-52.8,.75,'#15152b');
+    ctx.strokeStyle=OL;ctx.lineWidth=.9;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(-4.6,-55.6);ctx.lineTo(-1.2,-56.6);ctx.moveTo(4.8,-55.6);ctx.lineTo(1.4,-56.6);ctx.stroke();
+    ctx.beginPath();ctx.ellipse(.2,-49.6,1.5,2,0,0,Math.PI*2);fs('#5a1a2a',.8);
+    ctx.beginPath();ctx.moveTo(-7.6,-58);ctx.quadraticCurveTo(-9,-55.5,-7.6,-54.6);ctx.quadraticCurveTo(-6.2,-55.5,-7.6,-58);ctx.fillStyle='#7fd3ff';ctx.fill();}
+  else{circ(-2.6,-53,1.1,'#15152b');circ(2.8,-53,1.1,'#15152b');circ(-2.2,-53.4,.4,'#fff');circ(3.2,-53.4,.4,'#fff');
   ctx.strokeStyle=OL;ctx.lineWidth=.7;ctx.beginPath();ctx.moveTo(-4,-54);ctx.lineTo(-4.8,-54.8);ctx.moveTo(4.2,-54);ctx.lineTo(5,-54.8);ctx.stroke();
   circ(-4.3,-50.8,1.2,'rgba(255,120,150,.5)');circ(4.5,-50.8,1.2,'rgba(255,120,150,.5)');
-  ctx.strokeStyle='#7a2a3a';ctx.lineWidth=1;ctx.lineCap='round';ctx.beginPath();ctx.arc(.2,-51,2.2,.2,Math.PI-.2);ctx.stroke();
+  ctx.strokeStyle='#7a2a3a';ctx.lineWidth=1;ctx.lineCap='round';ctx.beginPath();ctx.arc(.2,-51,2.2,.2,Math.PI-.2);ctx.stroke();}
   circ(-7.2,-51,1,'#ffd166');circ(7.2,-51,1,'#ffd166');
   limb(5,-43,af,15,3.6,D,SKIN,3.5);
   ctx.restore();}
@@ -954,7 +959,7 @@ function drawSceneInner(n,who,OX){const tb=w=>who===w?-Math.abs(Math.sin(frame*.
       ctx.strokeStyle='rgba(190,210,255,.5)';ctx.lineWidth=1.5;ctx.beginPath();for(let i=0;i<60;i++){const x=wrap(i*97-frame*3,W+40)-20,y=wrap(i*53+frame*10,H);ctx.moveTo(x,y);ctx.lineTo(x-5,y+16);}ctx.stroke();
       if(frame%150<5){ctx.fillStyle='rgba(255,255,255,.4)';ctx.fillRect(0,0,W,H);}
       ctx.translate(OX,0);
-      drawMama(380,385+tb('Mama'),2,1,{cheer:true});drawNoah(490,385,2.2,1,{plain:true});drawJoJo(570,385,2.2,1,{});
+      drawMama(380,385+tb('Mama'),2,1,{scared:true});drawNoah(490,385,2.2,1,{plain:true});drawJoJo(570,385,2.2,1,{});
       const gx=760+Math.sin(frame*.03)*30,gy=150+bob+tb('Captain Grumble');
       ctx.strokeStyle='#ffe14d';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(gx,gy+50);ctx.lineTo(gx-6,gy+62);ctx.lineTo(gx+4,gy+66);ctx.lineTo(gx,gy+80);ctx.stroke();
       drawCage(gx,gy+124+tb('Papa Mario')*.5,.9);drawGrumble(gx,gy,1.5,'angry');}
