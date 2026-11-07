@@ -253,10 +253,11 @@ function drawNoah(x,y,s,face,o){o=o||{};const c=o.cape||cape(),plain=o.plain;ctx
   else{ctx.fillStyle='#fff';starPath(.5,-30,3.4);ctx.fill();}
   rect(-1.5,-41.5,4,3.5,SKIN);
   ctx.beginPath();ctx.arc(1,-46.5,8.5,0,Math.PI*2);fs(SKIN);
+  const CURLS=[[-6.8,-45.5,2.9],[-7.6,-49.6,3.1],[-6,-53.4,3.2],[-2.6,-56,3.3],[1.4,-57.2,3.3],[5.4,-56.4,3.2],[8.8,-54,3],[10.8,-51.4,2.4]];
+  puffs(CURLS,HAIR,2.2);ctx.fillStyle=HAIR;ctx.beginPath();ctx.arc(1,-49.2,7.8,Math.PI,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.28)';ctx.lineWidth=.9;for(const [a,b,r] of CURLS){ctx.beginPath();ctx.arc(a,b,r*.5,Math.PI*1.1,Math.PI*1.9);ctx.stroke();}
+  for(const [a,b] of [[-3,-52.5],[1.5,-53.5],[5.5,-52.5]]){ctx.beginPath();ctx.arc(a,b,1.5,Math.PI*.9,Math.PI*2.1);ctx.stroke();}
   ctx.beginPath();ctx.ellipse(-3.6,-45.3,1.7,2.4,0,0,Math.PI*2);fs(SKIN,1);
-  ctx.beginPath();ctx.moveTo(-7.4,-43);ctx.quadraticCurveTo(-9.6,-53,-2,-56.5);ctx.lineTo(0,-59.5);ctx.lineTo(3,-56.6);ctx.lineTo(6.8,-58.8);ctx.lineTo(7.6,-55.2);ctx.lineTo(11.8,-54.6);
-  ctx.quadraticCurveTo(10.6,-50,8.6,-50.6);ctx.quadraticCurveTo(3,-52.4,-1,-50.2);ctx.quadraticCurveTo(-4,-48.4,-4.4,-43.6);ctx.closePath();fs(HAIR);
-  ctx.strokeStyle='rgba(255,255,255,.25)';ctx.lineWidth=1.1;ctx.beginPath();ctx.moveTo(-5,-52);ctx.quadraticCurveTo(-2,-55.5,3,-55.5);ctx.stroke();
   if(!plain){rr(-1.6,-49.6,12.2,5.4,2.7);fs(c,1);}
   ell(3,-47,1.8,1.6,'#fff');ell(7.7,-47,1.7,1.6,'#fff');circ(3.6,-46.9,.95,'#15152b');circ(8.2,-46.9,.95,'#15152b');circ(3.9,-47.3,.35,'#fff');circ(8.5,-47.3,.35,'#fff');
   if(plain){ctx.strokeStyle=HAIR;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(1.5,-49.6);ctx.lineTo(4.6,-49.9);ctx.moveTo(6.6,-49.9);ctx.lineTo(9.4,-49.4);ctx.stroke();}
@@ -520,6 +521,8 @@ const INTRO=[
  {who:'Mama',scene:'homeKids',text:'And take Truupa with you. When you need help, call out TRUUPA SPIN!'},
  {who:'Truupa',scene:'homeKids',text:"Truupa the Turtle Knight, reporting for duty! Let's roll!"},
  {who:'JoJo',scene:'homeKids',text:'Me come too! I cheer for you, Noah!'},
+ {who:'Mama',scene:'homeKids',text:"One more thing, Noah. Remember your allergy: NO nuts! If you see peanuts, jump right over them, or blast them away with the Truupa Spin! JoJo, help him watch out!"},
+ {who:'JoJo',scene:'homeKids',text:'I watch for nuts, Noah!'},
  {who:'Mama',scene:'homeKids',text:'I believe in you both. Go bring Papa home!'},
  {who:'Noah',scene:'homeKids',text:"Let's go, team! SUPER NOAH to the rescue!"}];
 const NOTES=[
@@ -659,7 +662,7 @@ function stepPlay(){
   for(const c of L.shooters){const dx=(P.x+P.w/2)-(c.x+16);if(c.flash>0)c.flash--;
     if(Math.abs(dx)<480&&Math.abs(dx)>40&&--c.cd<=0){c.cd=230;const dir=Math.sign(dx);
       L.ents.push(E('peanut',c.x+16+dir*18-9,c.y+8,18,12,{vx:dir*1.7}));sfx('cannon');c.flash=10;
-      if(!L.nutWarned){L.nutWarned=true;jojoSay('Uh oh! Nuts! Jump over them!');}}}
+      if(!L.nutWarned){L.nutWarned=true;jojoSay('Nuts! Jump or use Truupa Spin!');}}}
   for(const s of L.spawners){const dx=s.x-P.x;if(dx>60&&dx<720&&--s.cd<=0){s.cd=230;L.ents.push(E('boulder',s.x+2,s.y+4,28,28,{vx:-1.6}));}}
   for(const e of L.ents){if(!e.alive){e.dead++;continue;}
     const proj=e.t==='peanut'||e.t==='boulder'||e.t==='drop';
@@ -692,7 +695,7 @@ function stepPlay(){
       else{P.hearts=Math.min(5,P.hearts+1);sfx('heart');burst(it.x+10,it.y+10,'#ff5c8a',8);}}}
   L.items=L.items.filter(i=>!i.got&&i.y<ROWS*T+40);
   for(const c of L.checks)if(!c.on&&overlap(P,{x:c.x+6,y:c.y-40,w:20,h:72})){c.on=true;L.check={x:c.x+5,fy:c.y+T};sfx('check');jojoSay('Checkpoint! Yay!');burst(c.x+16,c.y-30,'#ffe14d',12,'star');}
-  const tx=P.x+P.w/2-P.face*46,ty=P.y-16;J.x+=(tx-J.x)*.08;J.y+=(ty-J.y)*.08;
+  const tx=P.x+P.w/2-P.face*58,ty=P.y-62;J.x+=(tx-J.x)*.08;J.y+=(ty-J.y)*.08;
   if(J.sayT>0)J.sayT--;J.idle++;if(J.idle>1300){jojoSay(rand(IDLE));}
   J.heartT++;if(P.hearts<=3&&J.heartT>600){J.heartT=0;L.items.push({t:'heart',x:J.x-10,y:J.y-30,w:20,h:18,vx:0,vy:-3});jojoSay('Here, Noah! A heart for you!');}
   const b=L.boss;
@@ -707,7 +710,7 @@ function stepPlay(){
 function stepTruupa(){
   if(pressed('shell')&&R.mode==='walk'){R.mode='spin';R.sx=R.x+R.w/2;R.sy=R.y+R.h-13;R.svx=P.face*8.5;R.dist=0;R.back=false;sfx('shell');popText('TRUUPA SPIN!',R.sx,R.sy-30,'#ffd23f');}
   if(R.mode==='walk'){
-    const tx=P.x+P.w/2-P.face*38-R.w/2,dx=tx-R.x,maxV=P.dash>0?7.6:4.6;
+    const tx=P.x+P.w/2-P.face*50-R.w/2,dx=tx-R.x,maxV=P.dash>0?7.6:4.6;
     if(Math.abs(dx)>8){R.vx+=Math.sign(dx)*.6;R.vx=Math.max(-maxV,Math.min(maxV,R.vx));R.face=Math.sign(dx);}else{R.vx*=.7;R.face=P.face;}
     R.vy=Math.min(R.vy+.55,13);const wasG=R.onG;
     moveX(R);if(R.hitW&&wasG)R.vy=-11;
@@ -718,7 +721,10 @@ function stepTruupa(){
     if(R.y>ROWS*T+30||Math.hypot(P.x-R.x,P.y-R.y)>520||(L.boss&&L.boss.active&&R.x<ARENA_L)){R.x=P.x+P.w/2-P.face*30-R.w/2;R.y=P.y+P.h-R.h;R.vx=R.vy=0;burst(R.x+9,R.y+15,'#fff',10);}
   }else{
     R.rot+=.6*Math.sign(R.svx);if(frame%2===0)parts.push({kind:'spinghost',x:R.sx,y:R.sy,rot:R.rot,life:10});
-    if(!R.back){R.sx+=R.svx;R.dist+=Math.abs(R.svx);if(solidAt(Math.floor((R.sx+Math.sign(R.svx)*12)/T),Math.floor(R.sy/T))||R.dist>340)R.back=true;}
+    {const ntx=Math.floor(R.sx/T),nty=Math.floor(R.sy/T);if(tileAt(ntx,nty)==='N'){L.g[nty][ntx]=' ';sfx('brk');burst(ntx*T+16,nty*T+24,'#dba864',14);if(!parts.some(p=>p.text==='NUTS BLASTED!'))popText('NUTS BLASTED!',ntx*T+16,nty*T-10,'#7fe3ff');jojoSay('Bye bye, nuts!');}}
+    if(!R.back){R.sx+=R.svx;R.dist+=Math.abs(R.svx);const hx=Math.floor((R.sx+Math.sign(R.svx)*12)/T),hy=Math.floor(R.sy/T);
+      if(tileAt(hx,hy)==='n'){L.g[hy][hx]=' ';L.shooters=L.shooters.filter(c=>Math.floor(c.x/T)!==hx);sfx('brk');shake=6;burst(hx*T+16,hy*T+16,'#7a4a24',16);popText('CANNON BLASTED!',hx*T+16,hy*T-10,'#7fe3ff');jojoSay('Truupa did it!');R.back=true;}
+      else if(solidAt(hx,hy)||R.dist>340)R.back=true;}
     else{const hx=P.x+P.w/2-P.face*30,hy=P.y+P.h-13,dx=hx-R.sx,dy=hy-R.sy,d=Math.hypot(dx,dy);
       if(d<14){R.mode='walk';R.x=R.sx-R.w/2;R.y=P.y+P.h-R.h;R.vx=0;R.vy=-4;R.face=P.face;}else{R.sx+=dx/d*10;R.sy+=dy/d*10;}}
     const sr={x:R.sx-13,y:R.sy-13,w:26,h:26};
@@ -984,8 +990,8 @@ function drawCard(){const d=L.def,t=THEMES[d.theme];drawBG(d.theme,stateT*1.5,fr
   drawTruupa(rx-60,455,1.5,1,{run:true,walk:frame*.3});drawNoah(rx+40,455,1.55,1,{run:true,walk:frame*.3});drawJoJo(rx-130,410+Math.sin(frame*.08)*6,1.5,1,{bubble:true,cheer:true});
   if(first){rr(W/2-350,116,700,196,18);ctx.fillStyle='rgba(255,255,255,.94)';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#2b2d6e';ctx.stroke();
     txt('How to play',W/2,142,24,'#e0614f','center',null);
-    const L2=isTouch?['◀ ▶ walk   ·   ⬆ jump   ·   🐢 SPIN = Truupa Spin!','Double-tap ▶ to ZOOM super fast!','Jump on the Grumble Goons to bop them','Hit the ⚡ crates for power bolts and grow BIG!','Watch out for nuts and spiky plants!']
-      :['← → walk   ·   SPACE jump   ·   X = Truupa Spin!','Double-tap → to ZOOM super fast!','Jump on the Grumble Goons to bop them','Hit the ⚡ crates for power bolts and grow BIG!','Watch out for nuts and spiky plants!'];
+    const L2=isTouch?['◀ ▶ walk   ·   ⬆ jump   ·   🐢 SPIN = Truupa Spin!','Double-tap ▶ to ZOOM super fast!','Jump on the Grumble Goons to bop them','Hit the ⚡ crates for power bolts and grow BIG!','Jump over nuts or blast them with Truupa Spin!']
+      :['← → walk   ·   SPACE jump   ·   X = Truupa Spin!','Double-tap → to ZOOM super fast!','Jump on the Grumble Goons to bop them','Hit the ⚡ crates for power bolts and grow BIG!','Jump over nuts or blast them with Truupa Spin!'];
     L2.forEach((s,i)=>txt(s,W/2,176+i*29,i===0?21:19,'#22243f','center',null));}
   if(stateT>30)bigButton(first?W-290:W/2-110,first?380:300,first?240:220,first?66:60,first?'START ▶':"LET'S GO ▶");}
 function drawTitle(){drawBG('meadow',frame*.6,frame);
