@@ -957,11 +957,13 @@ const swX=i=>W/2+(i-2.5)*56,SW_Y=432;
 function titleButtons(){const cont=savedWorld>1&&savedWorld<=5;
   return cont?{start:{x:W/2-250,y:470,w:235,h:58},cont:{x:W/2+15,y:470,w:235,h:58}}:{start:{x:W/2-145,y:470,w:290,h:58},cont:null};}
 const inR=(p,r)=>r&&p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h;
+const RACE_R={x:16,y:14,w:250,h:54};
 function stepTitle(){startSong('title');
   if(pressed('left')){capeIdx=(capeIdx+5)%6;store.set('cape',capeIdx);sfx('bump');}
   if(pressed('right')){capeIdx=(capeIdx+1)%6;store.set('cape',capeIdx);sfx('bump');}
   const bt=titleButtons();
   if(tap){for(let i=0;i<6;i++)if(Math.hypot(tap.x-swX(i),tap.y-SW_Y)<26){capeIdx=i;store.set('cape',i);sfx('star');return;}
+    if(inR(tap,RACE_R)){sfx('check');location.href='race.html';return;}
     if(inR(tap,bt.start)){newGame();return;}if(inR(tap,bt.cont)){continueGame();return;}}
   if(pressed('ok')){bt.cont?continueGame():newGame();return;}
   if(pressed('jump'))newGame();}
@@ -1245,6 +1247,7 @@ function drawTitle(){drawBG('meadow',frame*.6,frame);
   txt('Pick your cape color:',W/2,400,20,'#fff');
   for(let i=0;i<6;i++){const sel=i===capeIdx;ctx.beginPath();ctx.arc(swX(i),SW_Y,sel?23:18,0,Math.PI*2);fs('#fff',2.5);circ(swX(i),SW_Y,sel?18.5:14,CAPES[i]);if(sel){ctx.fillStyle='#fff';starPath(swX(i),SW_Y,7);ctx.fill();}}
   const bt=titleButtons();bigButton(bt.start.x,bt.start.y,bt.start.w,bt.start.h,'▶ NEW ADVENTURE','#ff8a65','#e0413a');
+  bigButton(RACE_R.x,RACE_R.y,RACE_R.w,RACE_R.h,'🐢 TURBO RALLY','#7be38b','#2f9e4a');
   if(bt.cont)bigButton(bt.cont.x,bt.cont.y,bt.cont.w,bt.cont.h,'CONTINUE: W'+savedWorld,'#64b5f6','#1e63c7');}
 function drawEnd(){drawScene('homeEnd','');rr(W/2-290,400,580,132,20);ctx.fillStyle='rgba(255,255,255,.95)';ctx.fill();ctx.lineWidth=4;ctx.strokeStyle='#2b2d6e';ctx.stroke();
   bigText('THE END',W/2-120,434,36,['#fff6a8','#ffcf3a','#ff7a1a']);txt('Super Noah and JoJo saved the day!',W/2-120,470,19,'#22243f','center',null);
