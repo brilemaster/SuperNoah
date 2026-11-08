@@ -6,6 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <title>Super Noah</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js"></script>
+<script>if(typeof supabase==="undefined")document.write('<script src="https://unpkg.com/@supabase/supabase-js@2.110.1/dist/umd/supabase.js"><\/script>');</script>
 <style>
 html,body{margin:0;height:100%;background:#14163a;overflow:hidden;position:fixed;inset:0;overscroll-behavior:none;-webkit-text-size-adjust:100%;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
@@ -24,6 +26,13 @@ canvas{display:block;background:#7ec8ff;touch-action:none}
 #top{position:fixed;top:max(8px,env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));z-index:6;display:flex;gap:8px}
 #top button{background:rgba(10,12,40,.55);color:#fff;border:2px solid rgba(255,255,255,.55);border-radius:12px;font-size:20px;padding:5px 9px;min-width:46px}
 #top button.off{opacity:.45}
+#hof{position:fixed;inset:0;z-index:8;display:none;align-items:center;justify-content:center;background:rgba(10,12,40,.6);padding:12px;box-sizing:border-box;overflow:auto;touch-action:pan-y}
+#hof .hp{background:#fff;border:4px solid #2b2d6e;border-radius:22px;padding:14px 18px;max-width:520px;width:100%;display:flex;flex-direction:column;align-items:center;gap:8px;font-family:"Avenir Next","Trebuchet MS",system-ui;margin:auto}
+#hof h1{margin:0;font:900 30px "Arial Black",system-ui;color:#ffcf3a;-webkit-text-stroke:2px #17142e;text-shadow:0 4px 0 #17142e;text-align:center}
+#hof ol{list-style:none;margin:0;padding:0;width:100%}#hof li{font:800 18px inherit;color:#2b2d6e;background:#eef3ff;border-radius:10px;padding:6px 10px;margin:4px 0}#hof li.mine{background:#fff3d6}
+#hof li span{float:right}#hof input{font:800 20px inherit;padding:8px 12px;border-radius:12px;border:3px solid #2b2d6e;width:180px;text-align:center}
+#hof button{font:900 18px "Arial Black",system-ui;color:#fff;border:3px solid #fff;border-radius:26px;padding:10px 18px;background:linear-gradient(#ffd65a,#ff7a1a);box-shadow:0 4px 0 rgba(0,0,0,.3)}
+#hof button.gray{background:linear-gradient(#b0b4c8,#6c7088)}#hform{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}#hmsg{font:700 15px inherit;color:#c2335d;text-align:center}
 #rotate{position:fixed;inset:0;background:#2b2d6e;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:bold 28px system-ui,sans-serif;z-index:10;padding:24px;line-height:1.4}
 @media (orientation:portrait) and (pointer:coarse){#rotate{display:flex}}
 @media (max-height:500px){
@@ -44,6 +53,9 @@ canvas{display:block;background:#7ec8ff;touch-action:none}
 <div class="ctl left" id="leftCtl"><div class="btn" data-k="left">◀</div><div class="btn" data-k="up" id="upBtn" style="display:none;background:rgba(142,92,247,.55)">▲</div><div class="btn" data-k="right">▶</div><div class="btn" data-k="down" id="downBtn" style="display:none;background:rgba(142,92,247,.55)">▼</div></div>
 <div class="ctl right"><div class="btn" data-k="laser" id="laserBtn" style="display:none;background:rgba(255,40,90,.55)">◉<small>LASER</small></div><div class="btn" data-k="shell">🐢<small>SPIN</small></div><div class="btn big" data-k="jump">⬆</div></div>
 <div id="top"><button id="voice" aria-label="Read story aloud">🗣️</button><button id="mute" aria-label="Sound on or off">🔊</button></div>
+<div id="hof"><div class="hp"><h1>🏆 HALL OF HEROES</h1><div id="hsub" style="font:800 16px system-ui;color:#2b2d6e;text-align:center"></div>
+<div id="hform"><input id="hname" maxlength="10" placeholder="Your first name" autocomplete="off"><button id="hsave">Save my stars ⭐</button></div><div id="hmsg"></div>
+<ol id="hlist"></ol><button class="gray" id="hclose">Close</button></div></div>
 <div id="rotate">🔄<br>Turn your device sideways<br>to play Super Noah!</div>
 <script>
 'use strict';
@@ -53,14 +65,15 @@ canvas{display:block;background:#7ec8ff;touch-action:none}
    ========================================================= */
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
 let W=960;const H=544,T=32,ROWS=17;
+const SUPA_URL='https://zghpmysqcywzzarahras.supabase.co',SUPA_KEY='sb_publishable_AsuLILWamUfqc-B6tPB-4w_lIGlISvv';
 let RES=1;
 let lastFit='';
-function fit(){const vw=Math.round(window.visualViewport?visualViewport.width:innerWidth),vh=Math.round(window.visualViewport?visualViewport.height:innerHeight);
+function fit(){const vw=Math.round(document.documentElement.clientWidth||innerWidth),vh=Math.round(innerHeight||document.documentElement.clientHeight);
   const key=vw+'x'+vh;if(key===lastFit)return;lastFit=key;
   W=Math.round(Math.min(1600,Math.max(960,H*vw/vh)));const s=Math.min(vw/W,vh/H);cv.style.width=(W*s)+'px';cv.style.height=(H*s)+'px';
   RES=Math.min(2,Math.max(1,s*(window.devicePixelRatio||1)));const cw=Math.round(W*RES),ch=Math.round(H*RES);if(cv.width!==cw)cv.width=cw;if(cv.height!==ch)cv.height=ch;}
 let fitReq=0;function fitSoon(){if(!fitReq)fitReq=requestAnimationFrame(()=>{fitReq=0;fit();});}
-addEventListener('resize',fitSoon);addEventListener('orientationchange',()=>setTimeout(()=>{lastFit='';fit();},300));if(window.visualViewport)visualViewport.addEventListener('resize',fitSoon);fit();
+addEventListener('resize',fitSoon);addEventListener('orientationchange',()=>setTimeout(()=>{lastFit='';fit();},300));setInterval(fitSoon,1000);fit();
 document.addEventListener('touchmove',e=>{e.preventDefault();},{passive:false});['gesturestart','gesturechange','dblclick'].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
 
 const store={get(k,d){try{const v=localStorage.getItem('superNoah_'+k);return v===null?d:JSON.parse(v);}catch(e){return d;}},
@@ -746,7 +759,7 @@ function newGame(){totalStars=0;resetNoah();store.set('check',null);startSong('t
 function continueGame(){totalStars=store.get('stars',0);resetNoah();const wi=Math.max(0,Math.min(4,savedWorld-1));startWorld(wi);
   const ck=store.get('check',null);if(ck&&ck.w===wi){for(const c of L.checks)if(c.x<=ck.cx){c.on=true;c.rt=30;}L.check={x:ck.x,fy:ck.fy};P.x=ck.x;P.y=ck.fy-P.h;P.safe={x:P.x,fy:ck.fy};
     R.x=P.x-40;R.y=ck.fy-R.h;J.x=P.x-40;J.y=P.y-60;L.fromCheck=true;updCam(true);}}
-function startEnding(){startSong('victory');runStory(ENDING,()=>{savedWorld=1;store.set('world',1);store.set('check',null);setState('end');startSong('victory');});}
+function startEnding(){startSong('victory');runStory(ENDING,()=>{savedWorld=1;store.set('world',1);store.set('check',null);setState('end');startSong('victory');setTimeout(()=>openHof(totalStars),1800);});}
 function startDash(d){P.dash=55;P.dashDir=d;P.face=d;sfx('dash');popText('ZOOM!',P.x+P.w/2,P.y-12,'#7fe3ff');if(Math.random()<.4)jojoSay('Zoom zoom!');}
 
 const ARENA_L=152*T,ARENA_R=181*T,GROUND_Y=14*T;
@@ -957,13 +970,30 @@ const swX=i=>W/2+(i-2.5)*56,SW_Y=432;
 function titleButtons(){const cont=savedWorld>1&&savedWorld<=5;
   return cont?{start:{x:W/2-250,y:470,w:235,h:58},cont:{x:W/2+15,y:470,w:235,h:58}}:{start:{x:W/2-145,y:470,w:290,h:58},cont:null};}
 const inR=(p,r)=>r&&p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h;
-const RACE_R={x:16,y:14,w:250,h:54};
+const RACE_R={x:14,y:12,w:236,h:100},HOF_R={x:14,y:120,w:170,h:42};
+let sbx=null,hofTop=null,hofScore=null;
+function sbc(){if(!sbx&&typeof supabase!=='undefined'){try{sbx=supabase.createClient(SUPA_URL,SUPA_KEY);}catch(e){}}return sbx;}
+async function loadHof(){const c=sbc();if(!c)return null;try{const {data,error}=await c.from('scores').select('name,score').eq('game','noah').order('score',{ascending:false}).limit(10);if(error)return null;hofTop=data;return data;}catch(e){return null;}}
+function hofEl(id){return document.getElementById(id);}
+async function openHof(score){hofScore=score;const box=hofEl('hof');box.style.display='flex';hofEl('hmsg').textContent='';
+  hofEl('hform').style.display=score!=null?'flex':'none';hofEl('hname').value=store.get('hname','');
+  hofEl('hsub').textContent=score!=null?`You saved Daddy with ⭐ ${score} stars! Add your name:`:'The best Super Noah heroes!';
+  const ol=hofEl('hlist');ol.innerHTML='<li>Loading...</li>';const top=await loadHof();
+  if(!top){ol.innerHTML='<li>The Hall of Heroes is not set up yet. Ask a grown-up!</li>';hofEl('hform').style.display='none';return;}
+  ol.innerHTML=top.length?'':'<li>No heroes yet. Be the first!</li>';top.forEach((r,i)=>{const li=document.createElement('li');li.innerHTML=`<b>${['🥇','🥈','🥉'][i]||(i+1)+'.'}</b> ${r.name} <span>⭐ ${r.score}</span>`;ol.appendChild(li);});}
+hofEl('hclose').onclick=()=>{hofEl('hof').style.display='none';};
+hofEl('hsave').onclick=async()=>{const nm=(hofEl('hname').value||'').replace(/[^A-Za-z ]/g,'').trim().slice(0,10);if(!nm){hofEl('hmsg').textContent='Type your first name first!';return;}
+  store.set('hname',nm);const c=sbc();if(!c)return;hofEl('hsave').disabled=true;try{const {error}=await c.from('scores').insert({game:'noah',track:'',name:nm,racer:'noah',score:hofScore});
+    if(error)hofEl('hmsg').textContent='Could not save right now. Try again later!';else{hofEl('hform').style.display='none';hofEl('hmsg').textContent='Saved! You are in the Hall of Heroes! 🎉';sfx('fanfare');await openHof(null);hofEl('hmsg').textContent='Saved! You are in the Hall of Heroes! 🎉';}}catch(e){}
+  hofEl('hsave').disabled=false;};
+loadHof();
 function stepTitle(){startSong('title');
   if(pressed('left')){capeIdx=(capeIdx+5)%6;store.set('cape',capeIdx);sfx('bump');}
   if(pressed('right')){capeIdx=(capeIdx+1)%6;store.set('cape',capeIdx);sfx('bump');}
   const bt=titleButtons();
   if(tap){for(let i=0;i<6;i++)if(Math.hypot(tap.x-swX(i),tap.y-SW_Y)<26){capeIdx=i;store.set('cape',i);sfx('star');return;}
     if(inR(tap,RACE_R)){sfx('check');location.href='race.html';return;}
+    if(inR(tap,HOF_R)){sfx('star');openHof(null);return;}
     if(inR(tap,bt.start)){newGame();return;}if(inR(tap,bt.cont)){continueGame();return;}}
   if(pressed('ok')){bt.cont?continueGame():newGame();return;}
   if(pressed('jump'))newGame();}
@@ -1247,8 +1277,24 @@ function drawTitle(){drawBG('meadow',frame*.6,frame);
   txt('Pick your cape color:',W/2,400,20,'#fff');
   for(let i=0;i<6;i++){const sel=i===capeIdx;ctx.beginPath();ctx.arc(swX(i),SW_Y,sel?23:18,0,Math.PI*2);fs('#fff',2.5);circ(swX(i),SW_Y,sel?18.5:14,CAPES[i]);if(sel){ctx.fillStyle='#fff';starPath(swX(i),SW_Y,7);ctx.fill();}}
   const bt=titleButtons();bigButton(bt.start.x,bt.start.y,bt.start.w,bt.start.h,'▶ NEW ADVENTURE','#ff8a65','#e0413a');
-  bigButton(RACE_R.x,RACE_R.y,RACE_R.w,RACE_R.h,'🐢 TURBO RALLY','#7be38b','#2f9e4a');
+  drawRaceBadge();bigButton(HOF_R.x,HOF_R.y,HOF_R.w,HOF_R.h,'🏆 HEROES','#ffd65a','#ff9a1f');drawHofTicker();
   if(bt.cont)bigButton(bt.cont.x,bt.cont.y,bt.cont.w,bt.cont.h,'CONTINUE: W'+savedWorld,'#64b5f6','#1e63c7');}
+function drawRaceBadge(){const r=RACE_R,p=1+Math.sin(frame*.1)*.035;ctx.save();ctx.translate(r.x+r.w/2,r.y+r.h/2);ctx.scale(p,p);ctx.translate(-r.w/2,-r.h/2);
+  const g=ctx.createLinearGradient(0,0,r.w,0);['#ff5c8a','#ffb02e','#ffe066','#7be38b','#4aa3ff','#a98bff'].forEach((c,i)=>g.addColorStop(i/5,c));
+  rr(-5,-5,r.w+10,r.h+10,22);ctx.fillStyle=g;ctx.fill();rr(0,0,r.w,r.h,18);fs('#1d2457',2);
+  ctx.save();ctx.beginPath();rr(0,0,r.w,r.h,18);ctx.clip();ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=10;for(let i=-2;i<8;i++){const x=((i*44+frame*2)%(r.w+80))-40;ctx.beginPath();ctx.moveTo(x,r.h);ctx.lineTo(x+40,0);ctx.stroke();}ctx.restore();
+  ctx.save();ctx.translate(52,r.h-16);const bob=Math.sin(frame*.3)*1.2;drawTruupa(0,-10+bob,1.05,1,{});
+  rr(-28,-24+bob,56,18,8);fs('#22a38f',1.8);ctx.fillStyle='rgba(255,255,255,.35)';rr(-24,-22+bob,48,4,2);ctx.fill();
+  for(const wx of [-20,20]){ctx.beginPath();ctx.arc(wx,-5,7,0,Math.PI*2);fs('#1d1d26',1.5);circ(wx,-5,2.5,'#8e93a8');}
+  ctx.strokeStyle='rgba(255,255,255,.7)';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.beginPath();for(let i=0;i<3;i++){const y=-20+i*7;ctx.moveTo(-38-((frame+i*5)%10),y);ctx.lineTo(-48-((frame+i*5)%10),y);}ctx.stroke();ctx.restore();
+  txt('TRUUPA',158,22,15,'#7fe3ff','center',OL,4,HEAVY);bigText('TURBO',158,46,25,['#fff6a8','#ffcf3a','#ff7a1a']);bigText('RALLY',158,72,25,['#fff6a8','#ffcf3a','#ff7a1a']);
+  rr(r.w-74,r.h-21,64,17,8);fs('#2f9e4a',1.5);txt('RACE! ▶',r.w-42,r.h-12.5,11,'#fff','center',null,0,HEAVY);
+  ctx.save();ctx.translate(r.w-6,6);ctx.rotate(.3);ctx.fillStyle='#e53935';starPath(0,0,20,0);ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#fff';ctx.stroke();txt('NEW!',0,1,10,'#fff','center',null,0,HEAVY);ctx.restore();
+  ctx.restore();}
+function drawHofTicker(){if(!hofTop||!hofTop.length)return;const n=Math.min(3,hofTop.length),x=W-226,y=68,h=34+n*24;
+  rr(x,y,212,h,14);ctx.fillStyle='rgba(15,18,48,.62)';ctx.fill();ctx.lineWidth=2.5;ctx.strokeStyle='#ffd23f';ctx.stroke();
+  txt('🏆 TOP HEROES',x+106,y+16,14,'#ffd23f','center',null,0,HEAVY);
+  for(let i=0;i<n;i++){const r=hofTop[i];txt(['🥇','🥈','🥉'][i]+' '+r.name,x+12,y+38+i*24,15,'#fff','left',null);txt('⭐'+r.score,x+200,y+38+i*24,15,'#fff','right',null);}}
 function drawEnd(){drawScene('homeEnd','');rr(W/2-290,400,580,132,20);ctx.fillStyle='rgba(255,255,255,.95)';ctx.fill();ctx.lineWidth=4;ctx.strokeStyle='#2b2d6e';ctx.stroke();
   bigText('THE END',W/2-120,434,36,['#fff6a8','#ffcf3a','#ff7a1a']);txt('Super Noah and JoJo saved the day!',W/2-120,470,19,'#22243f','center',null);
   txt('★ '+totalStars+' stars collected',W/2-120,502,17,'#555','center',null);
