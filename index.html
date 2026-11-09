@@ -73,9 +73,6 @@ canvas{display:block;background:#7ec8ff;touch-action:none}
 <div id="hform"><input id="hname" maxlength="10" placeholder="Your first name" autocomplete="off"><button id="hsave">Save my stars ⭐</button></div><div id="hmsg"></div>
 <ol id="hlist"></ol><button class="gray" id="hclose">Close</button></div></div>
 <div id="who"><div class="hp"><h1>👋 Hi, hero!</h1><p>What's your first name?</p><input id="whoName" maxlength="10" placeholder="First name" autocomplete="off">
-<p>Who's playing?</p><div class="row"><button class="age" data-a="L">🧸 Little Hero<small>ages 3–4</small></button><button class="age" data-a="B">🚀 Big Hero<small>ages 5–7</small></button></div>
-<p class="gp">FOR GROWN-UPS · Brain Boost questions</p><div class="row" id="whoBB"><button class="sm" data-b="1">On</button><button class="sm" data-b="0">Off</button></div>
-<p class="gp">FOR GROWN-UPS · Break reminder</p><div class="row" id="whoBrk"><button class="sm" data-m="0">Off</button><button class="sm" data-m="20">20 min</button><button class="sm" data-m="30">30 min</button><button class="sm" data-m="45">45 min</button></div>
 <div id="whoMsg"></div><button class="go2" id="whoGo">LET'S GO! ▶</button></div></div>
 <div id="pm"><div class="hp"><h1 id="pmH">⏸ PAUSED</h1><button class="go" id="pmGo">▶ KEEP PLAYING</button><button class="home" id="pmHome">🏠 MAIN MENU</button><p id="pmTip">Your progress is saved at your last checkpoint flag.</p></div></div>
 <div id="rotate">🔄<br>Turn your device sideways<br>to play Super Noah!</div>
@@ -104,8 +101,8 @@ const store={get(k,d){try{const v=localStorage.getItem('superNoah_'+k);return v=
 const NOAH_CAPE='#e53935',JOJO_CAPE='#ff3d9a';
 const cape=()=>(typeof HERO!=='undefined'&&HERO==='jojo')?JOJO_CAPE:NOAH_CAPE;
 let HERO=store.get('hero','noah')==='jojo'?'jojo':'noah';const isJ=()=>HERO==='jojo';
-let PNAME=store.get('pname','')||'',AGE=store.get('age','')||'',BRK=+store.get('brk',0)||0,BBON=store.get('bbon',true)!==false,playT=0,QZ=null;
-const needProfile=()=>!PNAME||!AGE;
+let PNAME=store.get('pname','')||'',AGE=store.get('age','')||'',BRK=0,BBON=store.get('bbon',true)!==false,playT=0,QZ=null;
+const needProfile=()=>!PNAME;
 let HARD=!!store.get('hard',false);const MAXH=()=>HARD?3:5;
 let savedWorld=store.get('world',1);let maxWorld=Math.max(store.get('max',1),savedWorld),mapSel=0;
 if(/[?&]unlockall/.test(location.search)){maxWorld=10;store.set('max',10);}
@@ -993,7 +990,6 @@ function loadLevel(i){lvlIdx=i;const def=LEVELS[i];const b=def.build();
   P.safe={x:P.x,fy:14*T};L.check={x:P.x,fy:14*T};
   Object.assign(R,{x:P.x-34,y:14*T-30,vx:0,vy:0,mode:'walk',face:1});
   J.x=P.x-40;J.y=P.y-30;J.sayT=0;J.heartT=0;J.cheerT=0;J.hint=null;J.nextCheer=(Math.floor(totalStars/25)+1)*25;cam.x=0;parts=[];P.boost=0;P.gfy=14*T;
-  if(BBON)placeBrain();
   if(HARD){const add=[];for(const e of L.ents)if(e.t==='goon'){e.vx=-1;const cx=e.x+46,tx=Math.floor((cx+14)/T),ty=Math.floor((e.y+13)/T);if(!solidAt(tx,ty)&&!solidAt(tx+1,ty)&&solidAt(tx,ty+1))add.push(E('goon',cx,e.y,28,26,{vx:1}));}L.ents.push(...add);if(L.boss){L.boss.hp=5;L.boss.maxhp=5;}placeCoins();}else L.coins=null;}
 
 /* ---------------- physics ---------------- */
@@ -1259,7 +1255,7 @@ function step(){frame++;stateT++;
     case 'map':stepMap();break;
     case 'story':stepStory();break;
     case 'card':if(stateT>30&&anyGo())setState('play');else if(lvlIdx>0&&!L.def.fly&&stateT>(C2TIPS[lvlIdx]?360:240))setState('play');break;
-    case 'play':if(QZ){stepQuiz();break;}if(BRK>0&&++playT>=BRK*3600){playT=0;pauseGame('break');}stepPlay();break;
+    case 'play':if(QZ){stepQuiz();break;}stepPlay();break;
     case 'clear':if(stateT>130){setState('note');noteOut=0;const n=noteFor(lvlIdx);if(n.call)sfx('ring');else sfx('whoosh');speak(n.text,n.call?'Mama':'Daddy');speak(n.jojo,'JoJo',true);}break;
     case 'note':if(noteOut>0&&++noteOut>22){noteOut=0;startWorld(lvlIdx+1);}break;
     case 'oneMore':if(stateT>45&&anyGo())respawn();break;
@@ -1828,7 +1824,7 @@ function drawHofPanel(){const r=hofRect(),n=hofTop?Math.min(3,hofTop.length):0,p
   else txt('Who is the best hero?',r.x+r.w/2,r.y+42,14,'#fff','center',null);
   txt('Tap to see all ▶',r.x+r.w/2,r.y+r.h-14,12,'#bfe6ff','center',null,0,HEAVY);
   ctx.restore();
-  {const pr=profRect();rr(pr.x,pr.y,pr.w,pr.h,15);fs('rgba(255,255,255,.92)',2.5);txt(PNAME?`👤 ${PNAME} · ${AGE==='L'?'Little':'Big'} Hero ✏️`:'👤 Who is playing? ✏️',pr.x+pr.w/2,pr.y+15.5,13,'#2b2d6e','center',null,0,HEAVY);}
+  {const pr=profRect();rr(pr.x,pr.y,pr.w,pr.h,15);fs('rgba(255,255,255,.92)',2.5);txt(PNAME?`👤 ${PNAME} ✏️`:'👤 Who is playing? ✏️',pr.x+pr.w/2,pr.y+15.5,13,'#2b2d6e','center',null,0,HEAVY);}
   if(HARD){const y=r.y+r.h+50;rr(r.x+32,y,160,30,15);fs('#e0413a',2.5);txt('🔥 HARD MODE',r.x+112,y+15.5,14,'#fff','center',null,0,HEAVY);}}
 function profRect(){const r=hofRect();return {x:r.x+12,y:r.y+r.h+10,w:r.w-24,h:30};}
 function drawEnd(){drawScene('homeEnd','');rr(W/2-290,400,580,132,20);ctx.fillStyle='rgba(255,255,255,.95)';ctx.fill();ctx.lineWidth=4;ctx.strokeStyle='#2b2d6e';ctx.stroke();
@@ -1880,7 +1876,7 @@ function openWho(next){whoNext=next||null;$w('whoName').value=PNAME;$w('whoMsg')
 document.querySelectorAll('#who .age').forEach(b=>b.onclick=()=>{AGE=b.dataset.a;whoSync();sfx('star');});
 document.querySelectorAll('#whoBrk .sm').forEach(b=>b.onclick=()=>{BRK=+b.dataset.m;whoSync();});
 document.querySelectorAll('#whoBB .sm').forEach(b=>b.onclick=()=>{BBON=b.dataset.b==='1';whoSync();});
-$w('whoGo').onclick=()=>{const nm=($w('whoName').value||'').replace(/[^A-Za-z ]/g,'').trim().slice(0,10);if(!nm){$w('whoMsg').textContent='Type your first name first!';return;}if(!AGE){$w('whoMsg').textContent='Tap Little Hero or Big Hero!';return;}
+$w('whoGo').onclick=()=>{const nm=($w('whoName').value||'').replace(/[^A-Za-z ]/g,'').trim().slice(0,10);if(!nm){$w('whoMsg').textContent='Type your first name first!';return;}
   PNAME=nm.charAt(0).toUpperCase()+nm.slice(1);store.set('pname',PNAME);store.set('hname',PNAME);store.set('age',AGE);store.set('brk',BRK);store.set('bbon',BBON);playT=0;$w('who').style.display='none';sfx('fanfare');const f=whoNext;whoNext=null;if(f)f();};
 document.getElementById('pauseB').onclick=e=>{e.stopPropagation();ensureAudio&&ensureAudio();pauseGame();};
 document.getElementById('homeB').onclick=e=>{e.stopPropagation();if(PLAYISH.includes(state))pauseGame();else goHome();};
