@@ -74,7 +74,7 @@ canvas{display:block;background:#7ec8ff;touch-action:none}
 <div id="wrap"><canvas id="c"></canvas></div>
 <div class="ctl left" id="leftCtl"><div class="btn" data-k="left">◀</div><div class="btn" data-k="up" id="upBtn" style="display:none;background:rgba(142,92,247,.55)">▲</div><div class="btn" data-k="right">▶</div><div class="btn" data-k="down" id="downBtn" style="display:none;background:rgba(142,92,247,.55)">▼</div></div>
 <div class="ctl right"><div class="btn" data-k="laser" id="laserBtn" style="display:none;background:rgba(255,40,90,.55)">◉<small>LASER</small></div><div class="btn" data-k="shell">🐢<small>SPIN</small></div><div class="btn big" data-k="jump">⬆</div></div>
-<div id="top"><button id="homeB" aria-label="Main menu" style="display:none">🏠</button><button id="pauseB" aria-label="Pause" style="display:none">⏸</button><button id="voice" aria-label="Read story aloud">🗣️</button><button id="mute" aria-label="Sound on or off">🔊</button></div>
+<div id="top"><button id="homeB" aria-label="Main menu" style="display:none">🏠</button><button id="pauseB" aria-label="Pause" style="display:none">⏸</button><button id="voice" style="display:none" aria-label="Read story aloud">🗣️</button><button id="mute" aria-label="Sound on or off">🔊</button></div>
 <div id="hof"><div class="hp"><h1>🏆 HALL OF HEROES</h1><div id="hsub" style="font:800 16px system-ui;color:#2b2d6e;text-align:center"></div>
 <div id="hform"><input id="hname" maxlength="10" placeholder="Your first name" autocomplete="off"><button id="hsave">Save my stars ⭐</button></div><div id="hmsg"></div>
 <ol id="hlist"></ol><a id="hwho" href="#" style="font:700 14px system-ui;color:#5a5f7a"></a><button class="gray" id="hclose">Close</button></div></div>
@@ -87,7 +87,7 @@ canvas{display:block;background:#7ec8ff;touch-action:none}
 <div id="rotate">🔄<br>Turn your device sideways<br>to play Super Noah!</div>
 <script>
 'use strict';
-const VERSION='2.8';
+const VERSION='2.9';
 /* =========================================================
    SUPER NOAH — Rescue Daddy!   (v2)
    An original platformer made with love for Noah & JoJo.
@@ -158,9 +158,9 @@ const anyGo=()=>pressed('jump')||pressed('ok')||!!tap;
 /* ---------------- audio (with iPad/iPhone unlock) ---------------- */
 let actx=null,master=null,musicBus=null,noiseBuf=null,muted=store.get('muted',false);
 const muteBtn=document.getElementById('mute'),voiceBtn=document.getElementById('voice');
-let voiceOn=store.get('voice',true);
+let voiceOn=false;
 function setMute(m){muted=m;store.set('muted',m);muteBtn.textContent=m?'🔇':'🔊';if(master)master.gain.value=m?0:0.55;if(m)hush();}
-function setVoice(v){voiceOn=v;store.set('voice',v);voiceBtn.classList.toggle('off',!v);if(!v)hush();}
+function setVoice(v){voiceOn=false;voiceBtn.style.display='none';voiceBtn.classList.toggle('off',!v);if(!v)hush();}
 muteBtn.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();unlockAudio();setMute(!muted);});
 voiceBtn.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();unlockAudio();setVoice(!voiceOn);});
 let curSong=null,wantSong=null,slot=0,nextT=0;
@@ -183,7 +183,7 @@ function unlockAudio(){ensureAudio();
     // Lets sound play on iPad/iPhone even when the side "silent" switch is on
     try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
     try{const a=document.createElement('audio');a.src=silentWav();a.loop=true;a.setAttribute('playsinline','');a.play().catch(()=>{});}catch(e){}
-    try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}catch(e){}}}
+  }}
 ['touchstart','touchend','pointerdown','click','keydown'].forEach(ev=>addEventListener(ev,unlockAudio,{capture:true,passive:true}));
 // ===== Theme song (menu music) =====
 // One shared player, created once, so the song can never double up.
@@ -310,7 +310,7 @@ let enVoice=null,esVoice=null;
 function pickVoice(){try{const vs=speechSynthesis.getVoices();enVoice=vs.find(v=>/^en[-_]US/i.test(v.lang)&&/Samantha|Google US|Aria|Jenny|Zira/i.test(v.name))||vs.find(v=>/^en[-_]US/i.test(v.lang))||vs.find(v=>/^en/i.test(v.lang))||null;esVoice=vs.find(v=>/^es[-_](MX|US|419)/i.test(v.lang))||vs.find(v=>/^es/i.test(v.lang))||null;}catch(e){}}
 if('speechSynthesis' in window){pickVoice();try{speechSynthesis.onvoiceschanged=pickVoice;}catch(e){}}
 const VOICE={Narrator:[1,.95],Noah:[1.3,1.05],JoJo:[1.9,1.05],Mama:[1.2,1],Daddy:[.8,.95],'Captain Grumble':[.4,.85],Truupa:[.65,1.1],Lowe:[1.6,1.2],Stranger:[.4,.75],'Baron Von Bedtime':[.55,.8],Cosmo:[1.7,1.15],'El Gran Remolino':[.9,.92],'The Sun':[1.05,.9]};
-function speak(text,who,queue){if(!voiceOn||muted||!('speechSynthesis' in window))return;
+function speak(text,who,queue){return;if(!voiceOn||muted||!('speechSynthesis' in window))return;
   try{if(!queue)speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text.replace(/[^\p{L}\p{N}\s.,!?'’-]/gu,' '));const v=VOICE[who]||[1,1];
     u.pitch=v[0];u.rate=v[1];if(who==='El Gran Remolino'&&esVoice){u.lang=esVoice.lang;u.voice=esVoice;}else{u.lang='en-US';if(enVoice)u.voice=enVoice;}speechSynthesis.speak(u);}catch(e){}}
 function hush(){try{speechSynthesis.cancel();}catch(e){}}
