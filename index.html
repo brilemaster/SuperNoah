@@ -820,16 +820,16 @@ const LEVELS=[
   b.room(194,'k7','ek7',rx=>luckyStuff(b,rx),{lucky:true});return b;}},
  {name:'Candyland Canyon',theme:'candy',song:'meadow',build(){const b=B(226,160);
   b.ground(0,26).ground(30,58).ground(62,89).ground(97,128).ground(132,159);
-  b.stars(5,13,3);b.plat(9,10,1,'P');b.fill(14,14,13,13,'B');b.plat(12,7,5);b.stars(12,6,5);b.at(20,13,'goon');b.plat(22,10,1,'C');b.fill(25,25,13,13,'B');
+  b.stars(5,13,3);b.plat(9,10,1,'P');b.fill(14,14,13,13,'B');b.plat(12,7,5,'-');b.stars(12,6,5);b.at(20,13,'goon');b.plat(22,10,1,'C');b.fill(25,25,13,13,'B');
   b.tube(32,2,{room:'r8'});b.at(36,13,'goon').at(41,13,'sprout');b.plat(38,10,1,'L');
-  b.fill(45,45,13,13,'B');b.plat(43,7,5,'-');b.stars(43,6,5);b.plat(48,7,1,'G');b.nuts(51,52);b.at(55,13,'goon');
+  b.fill(45,45,13,13,'B');b.plat(43,7,5,'-');b.stars(43,6,5);b.plat(48,9,1,'G');b.nuts(51,52);b.at(55,13,'goon');
   b.lucky(59,61,'k8');b.tube(64,2,{id:'ek8'});
-  b.at(68,13,'check');b.fill(72,72,13,13,'B');b.fill(76,76,11,11,'B');b.fill(80,80,9,9,'B');b.stars(80,6,3);b.plat(83,7,4);b.stars(83,6,4);b.plat(86,7,1,'H');b.at(87,13,'goon');
+  b.at(68,13,'check');b.fill(72,72,13,13,'B');b.fill(76,76,11,11,'B');b.fill(80,80,9,9,'B');b.stars(80,6,3);b.plat(83,7,4);b.stars(83,6,4);b.plat(87,9,1,'H');b.at(88,13,'goon');
   b.fill(89,89,13,13,'B');b.plat(92,10,2,'-');b.stars(92,9,2);
   b.tube(100,2,{id:'e8'});b.at(105,8,'bug');b.at(110,13,'goon').at(115,13,'goon');b.plat(112,10,1,'P');
   b.fill(118,119,12,13);b.fill(120,121,13,13,'B');b.plat(122,7,5);b.stars(122,6,5);b.cannon(126);
   b.plat(128,11,5,'-');b.stars(134,13,5);b.at(140,13,'sprout');b.plat(144,10,1,'S');b.at(152,13,'end');
-  b.room(162,'r8','e8',rx=>{b.fill(rx+3,rx+3,13,13,'B');b.plat(rx+1,7,4);b.stars(rx+1,6,4);b.fill(rx+9,rx+9,13,13,'B');b.plat(rx+7,7,1,'P').plat(rx+8,7,3).plat(rx+11,7,1,'H');b.stars(rx+8,6,3);b.stars(rx+13,13,9);b.arc(rx+13,11,9,3);});
+  b.room(162,'r8','e8',rx=>{b.fill(rx+3,rx+3,13,13,'B');b.plat(rx+1,7,4,'-');b.stars(rx+1,6,4);b.plat(rx+7,9,1,'P').plat(rx+8,9,3).plat(rx+11,9,1,'H');b.stars(rx+8,8,3);b.stars(rx+13,13,9);b.arc(rx+13,11,9,3);});
   b.room(194,'k8','ek8',rx=>luckyStuff(b,rx),{lucky:true});return b;}},
  {name:'Glow Volcano',theme:'volcano',song:'castle',build(){const b=B(226,160);
   b.ground(0,22).ground(26,48).ground(53,66).ground(70,84).ground(98,124).ground(128,159);
@@ -855,12 +855,12 @@ const LEVELS=[
   b.room(186,'k10','ek10',rx=>luckyStuff(b,rx),{lucky:true});return b;}},
  {name:'Moon Bounce',theme:'moon',song:'space',lowg:true,space:true,build(){const b=B(226,160);
   b.ground(0,24).ground(30,52).ground(58,82).ground(88,120).ground(126,159);
-  b.stars(5,13,3);b.plat(9,9,1,'P');b.plat(13,8,4);b.stars(13,7,4);b.at(18,13,'goon');b.plat(20,9,1,'I');b.arc(24,9,7,3);
+  b.stars(5,13,3);b.plat(9,9,1,'P');b.plat(13,8,4);b.stars(13,7,4);b.at(18,13,'goon');b.plat(20,9,1,'I');b.arc(24,9,7,2);
   b.tube(33,2,{room:'r11'});b.at(38,13,'goon');b.plat(41,8,1,'G').plat(42,8,3).plat(45,8,1,'L');b.stars(42,7,3);b.fill(48,49,12,13);b.stars(48,11,2);
   b.lucky(53,57,'k11');b.tube(61,2,{id:'ek11'});
-  b.at(66,13,'check');b.plat(70,6,5);b.stars(70,5,5);b.at(74,13,'goon');b.at(76,8,'bug');b.plat(79,9,1,'H');b.arc(82,8,7,4);
+  b.at(66,13,'check');b.plat(70,9,5);b.stars(70,8,5);b.at(74,13,'goon');b.at(76,8,'bug');b.plat(79,9,1,'H');b.arc(82,10,7,3);
   b.at(92,13,'sprout');b.nuts(96,97);b.plat(99,7,1,'P');b.plat(101,10,6,'-');b.stars(101,9,6);
-  b.tube(108,2,{id:'e11'});b.at(113,13,'goon').at(117,13,'goon');b.arc(120,9,7,3);
+  b.tube(108,2,{id:'e11'});b.at(113,13,'goon').at(117,13,'goon');b.arc(120,9,7,2);
   b.fill(127,127,12,13).fill(128,128,10,13).fill(129,130,8,13);b.stars(129,6,2);
   b.plat(134,9,1,'S');b.at(138,13,'goon');b.stars(141,12,5);b.at(146,13,'sprout');b.plat(148,9,1,'P');b.at(152,13,'end');
   b.room(162,'r11','e11',rx=>{b.stars(rx+2,13,5);b.plat(rx+6,9,1,'S').plat(rx+7,9,4).plat(rx+11,9,1,'H');b.stars(rx+7,8,4);b.plat(rx+14,6,5);b.stars(rx+14,5,5);b.arc(rx+3,7,9,3);b.stars(rx+19,13,4);});
@@ -883,9 +883,9 @@ const LEVELS=[
   b.lucky(59,62,'k13');b.tube(66,2,{id:'ek13'});
   b.at(71,13,'check');b.fill(75,75,13,13,'B');b.fill(79,79,11,11,'B');b.fill(83,83,9,9,'B');b.stars(83,6,3);b.plat(86,7,4,'-');b.stars(86,6,4);b.plat(88,10,1,'H');b.fill(90,90,13,13,'B');
   b.tube(100,2,{id:'e13'});b.at(105,8,'bug');b.at(108,13,'goon').at(113,13,'goon');b.plat(110,10,1,'P');b.nuts(117,118);
-  b.fill(121,122,12,13);b.fill(123,123,13,13,'B');b.plat(125,7,5,'-');b.stars(125,6,5);
+  b.fill(121,122,12,13);b.fill(123,123,13,13,'B');b.plat(125,9,5,'-');b.stars(125,8,5);
   b.stars(136,13,5);b.at(141,13,'sprout');b.plat(144,10,1,'S');b.at(152,13,'end');
-  b.room(162,'r13','e13',rx=>{b.fill(rx+3,rx+3,13,13,'B');b.plat(rx+1,7,4,'-');b.stars(rx+1,6,4);b.fill(rx+9,rx+9,13,13,'B');b.plat(rx+7,7,1,'P').plat(rx+8,7,3).plat(rx+11,7,1,'H');b.stars(rx+8,6,3);b.stars(rx+13,13,9);b.arc(rx+13,11,9,3);});
+  b.room(162,'r13','e13',rx=>{b.fill(rx+3,rx+3,13,13,'B');b.plat(rx+1,7,4,'-');b.stars(rx+1,6,4);b.plat(rx+7,9,1,'P').plat(rx+8,9,3).plat(rx+11,9,1,'H');b.stars(rx+8,8,3);b.stars(rx+13,13,9);b.arc(rx+13,11,9,3);});
   b.room(194,'k13','ek13',rx=>luckyStuff(b,rx),{lucky:true});return b;}},
  {name:'Starlight Station',theme:'station',song:'cave',build(){const b=B(226,160);
   b.ground(0,24).ground(28,54).ground(59,86).ground(91,124).ground(129,159);
@@ -1306,7 +1306,7 @@ function stepPlay(){
   P.vy=Math.min(P.vy+(EASY&&P.vy>0?.38:.55)*(lg?.58:1),lg?6.5:EASY?8:13);if(lg&&!P.onG&&frame%9===0)parts.push({kind:'bub',x:P.x+P.w/2,y:P.y+P.h,vx:0,vy:.3,life:20,r:1.5});}
   moveX(P);moveY(P);
   {const top=L.def.swim?70:40;if((L.def.fly||P.ride>0||L.def.swim)&&P.y<top){P.y=top;if(P.vy<0)P.vy=0;}}
-  if(P.onG){const fy=Math.floor((P.y+P.h+2)/T);for(let tx=Math.floor(P.x/T);tx<=Math.floor((P.x+P.w-1)/T);tx++)if(tileAt(tx,fy)==='B'){P.vy=inp.jump?-17.5:-14.5;P.onG=false;P.coy=0;P.buf=0;P.jumping=false;sfx('boing');L.jelly={tx,ty:fy,t:12};burst(P.x+P.w/2,P.y+P.h,'#ff9fd6',6);break;}}
+  if(P.onG){const fy=Math.floor((P.y+P.h+2)/T);for(let tx=Math.floor(P.x/T);tx<=Math.floor((P.x+P.w-1)/T);tx++)if(tileAt(tx,fy)==='B'){P.vy=inp.jump?-18:-16.5;P.onG=false;P.coy=0;P.buf=0;P.jumping=false;sfx('boing');L.jelly={tx,ty:fy,t:12};burst(P.x+P.w/2,P.y+P.h,'#ff9fd6',6);break;}}
   if(P.vy<0&&!P.bump){const ty=Math.floor(P.y/T);for(let tx=Math.floor(P.x/T);tx<=Math.floor((P.x+P.w-1)/T);tx++)if(tileAt(tx,ty)==='I'){L.g[ty][tx]='U';L.bumpA={tx,ty,t:8};P.y=(ty+1)*T;P.vy=0;
     L.items.push({t:'super',x:tx*T+4,y:ty*T,w:24,h:24,rise:28,vx:0,vy:0});sfx('sprout');popText('SECRET!',tx*T+16,ty*T-20,'#ff8fd8');jojoSay('A hidden crate!');break;}}
   if(P.bump){const {tx,ty}=P.bump;const c=L.g[ty][tx];
