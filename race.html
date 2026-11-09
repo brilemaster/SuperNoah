@@ -157,6 +157,7 @@ function unlockAudio(){ensureAudio();
     try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}catch(e){}}}
 ['touchstart','touchend','pointerdown','click','keydown'].forEach(ev=>addEventListener(ev,unlockAudio,{capture:true,passive:true}));
 
+
 const NOTE={C:0,'C#':1,D:2,'D#':3,E:4,F:5,'F#':6,G:7,'G#':8,A:9,'A#':10,B:11};
 function hz(n){const m=n.match(/^([A-G]#?)(\d)$/);const midi=NOTE[m[1]]+(+m[2]+1)*12;return 440*Math.pow(2,(midi-69)/12);}
 function toneAt(f,at,dur,type,vol,slide,dest){if(!actx)return;const o=actx.createOscillator(),g=actx.createGain();
@@ -744,6 +745,10 @@ function drawUFO(cx,cy,alive,t0){const bob=Math.sin(t0*.08)*2;ctx.save();ctx.tra
   if(alive){ctx.globalAlpha*=.35;ctx.fillStyle='#bfffe0';ctx.beginPath();ctx.moveTo(-5,6);ctx.lineTo(5,6);ctx.lineTo(8,14);ctx.lineTo(-8,14);ctx.fill();}
   ctx.restore();}
 
+// Opened inside Super Noah? Then the main game keeps the theme song playing on the menus.
+const EMBED=(()=>{try{return window.parent!==window;}catch(e){return true;}})();
+function menuSong(){if(EMBED)stopSong();else startSong('title');}
+let postedSt='',postedM=null;
 /* =========================================================
    TRUUPA TURBO RALLY — race code (assembled into race.html)
    ========================================================= */
@@ -1086,7 +1091,7 @@ function enterRoom(code){if(!NET_OK){say('Online racing is almost ready! A grown
   solo=false;roomCode=code;joinedAt=Date.now();$('lcode').textContent=code;$('sharemsg').textContent='';
   Net.join(code,meInfo(),{msg:onNet,peers:p=>{peers=p;drawLobby();},err:()=>{$('lstatus').textContent='Could not connect. Check the internet and try again.';}});toLobby();
   try{history.replaceState(null,'',location.pathname+'?room='+code);}catch(e){}}
-function toLobby(){rstate='lobby';me=null;TR=null;karts=[];resultsShown=false;showUI('lobby');setTouch(false);startSong('title');if(engine)engine.stop();buildPickers();drawLobby();}
+function toLobby(){rstate='lobby';me=null;TR=null;karts=[];resultsShown=false;showUI('lobby');setTouch(false);menuSong();if(engine)engine.stop();buildPickers();drawLobby();}
 function drawLobby(){const host=peers[0];const amHost=host&&host.id===myId;const ul=$('plist');ul.innerHTML='';
   for(const p of peers){const li=document.createElement('li');const dot=document.createElement('span');dot.className='dot';dot.style.background=(RACERS[p.char]||RACERS.noah).col;dot.textContent=((RACERS[p.char]||RACERS.noah).name)[0];
     li.appendChild(dot);li.appendChild(document.createTextNode((p.id===(host&&host.id)?'👑 ':'')+p.name+'  ('+(RACERS[p.char]?RACERS[p.char].name:'')+')'+(p.id===myId?' — you':'')));ul.appendChild(li);}
@@ -1131,7 +1136,7 @@ function wireUI(){$('name').value=myName;buildPickers();
   $('copy').onclick=async()=>{try{await navigator.clipboard.writeText(roomCode);$('sharemsg').textContent='Code copied!';}catch(e){$('sharemsg').textContent='Your code is '+roomCode;}};
   $('leave').onclick=()=>{Net.leave();roomCode=null;solo=true;rstate='menu';showUI('menu');try{history.replaceState(null,'',location.pathname);}catch(e){}};
   $('again').onclick=()=>{if(solo){resultsShown=false;goSolo();}else{Net.send({t:'again'});toLobby();}};
-  $('rmenu').onclick=()=>{Net.leave();roomCode=null;solo=true;rstate='menu';me=null;TR=null;karts=[];if(engine)engine.stop();startSong('title');showUI('menu');};
+  $('rmenu').onclick=()=>{Net.leave();roomCode=null;solo=true;rstate='menu';me=null;TR=null;karts=[];if(engine)engine.stop();menuSong();showUI('menu');};
   $('goHof').onclick=()=>{unlockAudio();showHof();};$('hofBack').onclick=()=>showUI('menu');
   if(inviteCode){$('invite').style.display='block';$('invite').innerHTML=`🎉 You're invited to race in room <b>${inviteCode}</b>!<br>Pick your racer, type your name, then tap the purple button.`;
     $('goJoinInvite').style.display='inline-block';$('goJoinInvite').textContent='▶ JOIN ROOM '+inviteCode;$('code').value=inviteCode;}
@@ -1153,8 +1158,12 @@ document.querySelectorAll('#rctl .btn').forEach(b=>{const k=b.dataset.k;const on
 /* ---------------- loop ---------------- */
 let shake=0,lastT=performance.now(),acc=0;
 function loop(t){acc+=Math.min(100,t-lastT);lastT=t;while(acc>=1000/60){frame++;if(me&&TR&&rstate!=='menu'&&rstate!=='lobby'&&!paused)update();for(const k in inp)prevI[k]=inp[k];acc-=1000/60;}
-  render();if(rstate==='menu'&&frame%2===0)paintThumbs();requestAnimationFrame(loop);}
-wireUI();showUI('menu');startSong('title');requestAnimationFrame(loop);
+  render();if(rstate==='menu'&&frame%2===0)paintThumbs();
+  if(EMBED&&(rstate!==postedSt||muted!==postedM)){postedSt=rstate;postedM=muted;try{parent.postMessage({sn:'rally',s:rstate,m:!!muted},'*');}catch(e){}}
+  requestAnimationFrame(loop);}
+wireUI();showUI('menu');menuSong();
+if(EMBED){const bk=document.querySelector('a.back');if(bk)bk.addEventListener('click',e=>{e.preventDefault();try{if(engine)engine.stop();}catch(_){}stopSong();try{parent.postMessage({sn:'close'},'*');}catch(_){}});}
+requestAnimationFrame(loop);
 
 </script>
 </body>

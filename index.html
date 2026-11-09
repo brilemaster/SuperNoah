@@ -87,7 +87,7 @@ canvas{display:block;background:#7ec8ff;touch-action:none}
 <div id="rotate">🔄<br>Turn your device sideways<br>to play Super Noah!</div>
 <script>
 'use strict';
-const VERSION='2.2';
+const VERSION='2.8';
 /* =========================================================
    SUPER NOAH — Rescue Daddy!   (v2)
    An original platformer made with love for Noah & JoJo.
@@ -185,6 +185,29 @@ function unlockAudio(){ensureAudio();
     try{const a=document.createElement('audio');a.src=silentWav();a.loop=true;a.setAttribute('playsinline','');a.play().catch(()=>{});}catch(e){}
     try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}catch(e){}}}
 ['touchstart','touchend','pointerdown','click','keydown'].forEach(ev=>addEventListener(ev,unlockAudio,{capture:true,passive:true}));
+// ===== Theme song (menu music) =====
+// One shared player, created once, so the song can never double up.
+let themeEl=null,themeG=null,themeRouted=false,themeFail=false,themeV=0,themeWanted=false,themeHold=false;
+function themeInit(){if(themeEl||themeFail)return;try{themeEl=new Audio();themeEl.src='theme.mp3';themeEl.loop=true;themeEl.preload='auto';themeEl.setAttribute('playsinline','');
+  themeEl.addEventListener('error',()=>{themeFail=true;try{themeEl.pause();}catch(e){}});}catch(e){themeFail=true;}}
+// Played directly, not through Web Audio: Safari can crackle/distort when a song is routed through it.
+let themeVolOK=null;
+function themeRoute(){if(themeRouted||!themeEl)return;themeRouted=true;try{themeEl.volume=.5;themeVolOK=Math.abs(themeEl.volume-.5)<.01;themeEl.volume=0;}catch(e){themeVolOK=false;}}
+function themePlay(){if(!themeEl||themeFail||themeHold||document.hidden||!themeEl.paused)return;try{const pr=themeEl.play();if(pr&&pr.catch)pr.catch(()=>{});}catch(e){}}
+function themeGesture(){themeInit();themeRoute();if(themeWanted)themePlay();}
+function themeTick(want){themeWanted=want&&!themeFail;if(!themeEl||themeFail)return;
+  if(themeWanted&&themeEl.paused)themeV=0;else themeV+=((themeWanted?1:0)-themeV)*(themeWanted?.04:.09);
+  themeEl.muted=!!muted;if(themeVolOK){try{themeEl.volume=Math.max(0,Math.min(1,themeV*.8));}catch(e){}}
+  if(themeWanted){if(unlocked&&themeEl.paused)themePlay();}
+  else if((themeVolOK===false||themeV<.02)&&!themeEl.paused){themeEl.pause();}}
+themeInit();
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&themeEl&&!themeEl.paused)themeEl.pause();});
+// iPhone/iPad: closing the tab or switching apps doesn't always send 'hidden', so stop on these too
+function themeStopNow(){themeHold=true;themeV=0;if(themeEl&&!themeEl.paused){try{themeEl.pause();}catch(e){}}}
+addEventListener('pagehide',themeStopNow);addEventListener('freeze',themeStopNow);
+addEventListener('pageshow',()=>{themeHold=false;});document.addEventListener('visibilitychange',()=>{if(document.hidden)themeStopNow();else themeHold=false;});
+try{if(navigator.mediaSession){navigator.mediaSession.setActionHandler('play',()=>{});navigator.mediaSession.setActionHandler('pause',themeStopNow);}}catch(e){}
+['touchend','pointerup','click','keydown'].forEach(ev=>addEventListener(ev,themeGesture,{capture:true,passive:true}));
 
 const NOTE={C:0,'C#':1,D:2,'D#':3,E:4,F:5,'F#':6,G:7,'G#':8,A:9,'A#':10,B:11};
 function hz(n){const m=n.match(/^([A-G]#?)(\d)$/);const midi=NOTE[m[1]]+(+m[2]+1)*12;return 440*Math.pow(2,(midi-69)/12);}
@@ -1559,7 +1582,7 @@ function userGo(src){
   else if(state==='note'){if(src==='tap'&&!(tap&&inR(tap,NOTE_R())))return;advanceNote();}}
 
 /* ---------------- step ---------------- */
-function step(){frame++;stateT++;
+function step(){frame++;stateT++;themeTick(state==='title'||state==='map');
   switch(state){
     case 'title':stepTitle();break;
     case 'map':stepMap();break;
@@ -1588,7 +1611,7 @@ const MAP_BACK={x:16,y:14,w:150,h:48},MAP_GO={x:0,y:478,w:290,h:54};
 function openMap(){const cur=Math.max(1,Math.min(maxWorld,savedWorld));mapSel=cur-1;setState('map');}
 function playFromMap(i){if(i+1>maxWorld){sfx('bump');jojoMapT=90;return;}if(needProfile()){openWho(()=>playFromMap(i));return;}totalStars=store.get('stars',0);resetNoah();store.set('check',null);savedWorld=i+1;store.set('world',savedWorld);sfx('check');beginWorld(i);}
 let jojoMapT=0;
-function stepMap(){startSong('title');if(jojoMapT>0)jojoMapT--;
+function stepMap(){if(themeFail)startSong('title');else stopSong();if(jojoMapT>0)jojoMapT--;
   if(pressed('left')){mapSel=(mapSel+NW-1)%NW;sfx('bump');}if(pressed('right')){mapSel=(mapSel+1)%NW;sfx('bump');}
   MAP_GO.x=W/2-145;
   if(tap){if(inR(tap,MAP_BACK)){sfx('bump');setState('title');return;}
@@ -1644,10 +1667,10 @@ hofEl('hsave').onclick=async()=>{const nm=(hofEl('hname').value||'').replace(/[^
     if(error)hofEl('hmsg').textContent='Could not save right now. Try again later!';else{hofEl('hform').style.display='none';hofEl('hmsg').textContent='Saved! You are in the Hall of Heroes! 🎉';sfx('fanfare');await openHof(null);hofEl('hmsg').textContent='Saved! You are in the Hall of Heroes! 🎉';}}catch(e){}
   hofEl('hsave').disabled=false;};
 loadHof();updShellBtn();
-function stepTitle(){startSong('title');
+function stepTitle(){if(themeFail)startSong('title');else stopSong();
   const bt=titleButtons();
   if(pressed('left')&&HERO!=='noah')setHero('noah');if(pressed('right')&&HERO!=='jojo')setHero('jojo');
-  if(tap){if(inR(tap,RACE_R)){sfx('check');location.href='race.html';return;}
+  if(tap){if(inR(tap,RACE_R)){sfx('check');openBonus('race.html');return;}
     if(inR(tap,hofRect())){sfx('star');openHof(null);return;}
     for(const b of modeRects())if(inR(tap,b)){setMode(b.m);return;}
     for(const p of pickRects())if(inR(tap,p)){if(HERO!==p.h)setHero(p.h);return;}
@@ -2094,6 +2117,7 @@ function drawCard(){const d=L.def,t=THEMES[d.theme];drawBG(d.theme,stateT*1.5,fr
   {const tip=C2TIPS[lvlIdx];if(tip&&!topL){ctx.font=`800 21px ${FONT}`;const tw=ctx.measureText(tip).width+40;rr(W/2-tw/2,244,tw,46,16);ctx.fillStyle='rgba(255,255,255,.94)';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#2b2d6e';ctx.stroke();txt(tip,W/2-tw/2+20,267.5,21,'#2b2d6e','left',null);}}
   if(L.fromCheck)txt('Starting from your checkpoint flag!',W/2,topL?406:260,20,'#ffd23f','center',OL,5);
   if(stateT>30)bigButton(topL?W-290:W/2-110,topL?380:300,topL?240:220,topL?66:60,first?'START ▶':"LET'S GO ▶");}
+function soundHint(){return !muted&&(!unlocked||(themeEl&&!themeFail&&themeEl.paused));}
 function drawTitle(){drawBG('meadow',0,0);ctx.fillStyle='rgba(255,255,255,.28)';ctx.fillRect(0,0,W,455);
   rect(0,455,W,H-455,'#a0632f');rect(0,455,W,9,'#4cd04c');rect(0,453,W,2,OL);
   ctx.save();ctx.translate(W/2,84);ctx.rotate(-.035);
@@ -2108,7 +2132,8 @@ function drawTitle(){drawBG('meadow',0,0);ctx.fillStyle='rgba(255,255,255,.28)';
   const bt=titleButtons();bigButton(bt.start.x,bt.start.y,bt.start.w,bt.start.h,'▶ NEW ADVENTURE','#ff8a65','#e0413a');bigButton(bt.map.x,bt.map.y,bt.map.w,bt.map.h,'★ CHOOSE WORLD','#c39bff','#7b4fd6');
   if(bt.cont)bigButton(bt.cont.x,bt.cont.y,bt.cont.w,bt.cont.h,(savedWorld>10?'CONTINUE: CH3-'+(savedWorld-10):savedWorld>5?'CONTINUE: CH2-'+(savedWorld-5):'CONTINUE: W'+savedWorld),'#64b5f6','#1e63c7');
   {const lx=RACE_R.x+RACE_R.w/2,ly=22;rr(lx-82,ly-13,164,26,13);fs('#ffffff',2.5);txt('⭐ BONUS GAMES ⭐',lx,ly+.5,14,'#7b4fd6','center',null,0,HEAVY);}
-  drawRaceBadge();drawHofPanel();txt('v'+VERSION,10,H-10,11,'rgba(255,255,255,.75)','left',null);}
+  drawRaceBadge();drawHofPanel();txt('v'+VERSION,10,H-10,11,'rgba(255,255,255,.75)','left',null);
+  if(soundHint()){const r=hofRect(),by=64,bh=30,pa=.75+.25*Math.sin(frame*.07);ctx.save();ctx.shadowColor='rgba(255,210,63,'+pa+')';ctx.shadowBlur=14;rr(r.x,by,r.w,bh,15);fs('#ffd23f',2.5);ctx.restore();txt('🔊 TAP FOR SOUND',r.x+r.w/2,by+bh/2+1,15,'#3b2a00','center',null,0,HEAVY);}}
 function pickRects(){return [{h:'noah',x:W/2-158,y:392,w:150},{h:'jojo',x:W/2+8,y:392,w:150}].map(r=>Object.assign(r,{hh:52}));}
 function seg(pts,w,col){ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.strokeStyle=OL;ctx.lineWidth=w+2.2;ctx.stroke();ctx.strokeStyle=col;ctx.lineWidth=w;ctx.stroke();}
 function drawNoahFront(x,y,s,o){o=o||{};ctx.save();ctx.translate(x,y);ctx.scale(s,s);const c=NOAH_CAPE,cd=shade(c,-.25),wv=Math.sin(frame*.12)*1.5;
@@ -2176,7 +2201,7 @@ function drawRaceBadge(){const r=RACE_R,p=1;ctx.save();ctx.translate(r.x+r.w/2,r
   ctx.restore();}
 function setMode(m){const e2=m==='e',h=m==='h';if(e2===EASY&&h===HARD)return;EASY=e2;HARD=h;store.set('hard',HARD);store.set('easy',EASY);sfx(h?'power':e2?'boing':'star');}
 function modeRects(){const r=hofRect(),w=(r.w-12)/3;return [['e','🧸 EASY','#ff7ab8'],['n','NORMAL','#43a047'],['h','🔥 HARD','#e0413a']].map((m,i)=>({m:m[0],lab:m[1],col:m[2],x:r.x+i*(w+6),y:r.y+r.h+34,w,h:38}));}
-function hofRect(){const n=hofTop?Math.min(3,hofTop.length):0;return {x:W-238,y:58,w:224,h:n?44+n*24+20:84};}
+function hofRect(){const n=hofTop?Math.min(3,hofTop.length):0;return {x:W-238,y:102,w:224,h:n?44+n*24+20:84};}
 function drawHofPanel(){const r=hofRect(),n=hofTop?Math.min(3,hofTop.length):0,pz=1+Math.sin(frame*.08)*.015;ctx.save();ctx.translate(r.x+r.w/2,r.y+r.h/2);ctx.scale(pz,pz);ctx.translate(-r.x-r.w/2,-r.y-r.h/2);
   rr(r.x,r.y,r.w,r.h,16);ctx.fillStyle='rgba(15,18,48,.72)';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#ffd23f';ctx.stroke();
   txt('🏆 HALL OF HEROES',r.x+r.w/2,r.y+18,15,'#ffd23f','center',null,0,HEAVY);
@@ -2229,7 +2254,7 @@ let last=performance.now(),acc=0;
 let gamePaused=false;const PLAYISH=['play','clear','oneMore','note','card'];
 function pauseGame(kind){if(gamePaused)return;gamePaused=true;const brk=kind==='break';document.getElementById('pmH').textContent=brk?'🧃 BREAK TIME!':'⏸ PAUSED';document.getElementById('pmGo').textContent=brk?"▶ I'M BACK!":'▶ KEEP PLAYING';document.getElementById('pmTip').textContent=brk?'Super heroes need rest too! Time to stretch, drink some water, and rest your eyes.':'Your progress is saved at your last checkpoint flag.';hush();if(actx&&actx.state==='running')actx.suspend();document.getElementById('pm').style.display='flex';}
 function resumeGame(){gamePaused=false;document.getElementById('pm').style.display='none';for(const k in inp)inp[k]=false;tap=null;if(actx&&!muted)actx.resume();}
-function goHome(){resumeGame();hush();story=null;document.getElementById('hof').style.display='none';if(L){L.call=null;}P.ride=0;P.star=0;setState('title');startSong('title');}
+function goHome(){resumeGame();hush();story=null;document.getElementById('hof').style.display='none';if(L){L.call=null;}P.ride=0;P.star=0;setState('title');if(themeFail)startSong('title');else stopSong();}
 let whoNext=null;const $w=id=>document.getElementById(id);const AVC=['#e53935','#ff3d9a','#1e88e5','#43a047','#8e24aa','#fb8c00','#00897b','#5d4037'];
 function pStat(id){const g=k=>{try{return JSON.parse(localStorage.getItem('superNoah_p'+id+'_'+k));}catch(e){return null;}};const w=g('world')||1,st=g('stars')||0;return `⭐ ${st}  ·  ${w>5?'Ch.2 W'+(w-5):'World '+w}`;}
 function switchPlayer(id){CURP=id;raw.set('cur',id);PNAME=(PLAYERS.find(p=>p.id===id)||{}).name||'';savedWorld=store.get('world',1);maxWorld=Math.max(store.get('max',1),savedWorld);totalStars=store.get('stars',0);raw.set('rname',PNAME);HARD=!!store.get('hard',false);EASY=!!store.get('easy',false);HERO=store.get('hero','noah')==='jojo'?'jojo':'noah';updShellBtn();}
@@ -2254,7 +2279,18 @@ document.getElementById('pmGo').onclick=()=>resumeGame();document.getElementById
 addEventListener('keydown',e=>{if(typing(e))return;if(e.code==='Escape'||e.code==='KeyP'){if(gamePaused)resumeGame();else if(PLAYISH.includes(state))pauseGame();}});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&PLAYISH.includes(state))pauseGame();});
 let topShown='';function updTop(){const k=(PLAYISH.includes(state)?'p':'')+(state!=='title'&&state!=='map'?'h':'');if(k===topShown)return;topShown=k;document.getElementById('pauseB').style.display=k.includes('p')?'':'none';document.getElementById('homeB').style.display=k.includes('h')?'':'none';}
-function loop(t){acc+=Math.min(100,t-last);last=t;while(acc>=1000/60){if(!gamePaused)step();acc-=1000/60;}render();updTop();requestAnimationFrame(loop);}
+// ===== Bonus games open on top of Super Noah, so the theme song can keep playing =====
+let bonusEl=null,bonusSt='menu',bonusMuted=false;
+function openBonus(url){if(bonusEl)return;hush();bonusSt='menu';bonusMuted=false;bonusEl=document.createElement('iframe');
+  bonusEl.src=url+'?embed=1&v='+VERSION;bonusEl.setAttribute('allow','autoplay; clipboard-write');bonusEl.title='Bonus game';
+  bonusEl.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:0;z-index:99999;background:#1a1b3a;';document.body.appendChild(bonusEl);
+  setTimeout(()=>{try{bonusEl&&bonusEl.focus();}catch(e){}},300);}
+function closeBonus(){if(!bonusEl)return;try{bonusEl.remove();}catch(e){}bonusEl=null;bonusMuted=false;tap=null;setState('title');}
+addEventListener('message',e=>{const d=e.data;if(!d||!bonusEl||e.source!==bonusEl.contentWindow)return;
+  if(d.sn==='rally'){bonusSt=d.s;bonusMuted=!!d.m;}else if(d.sn==='close')closeBonus();});
+function loop(t){acc+=Math.min(100,t-last);last=t;
+  if(bonusEl){acc=0;themeTick(bonusSt==='menu'||bonusSt==='lobby');if(themeEl&&bonusMuted)themeEl.muted=true;requestAnimationFrame(loop);return;}
+  while(acc>=1000/60){if(!gamePaused)step();acc-=1000/60;}render();updTop();requestAnimationFrame(loop);}
 requestAnimationFrame(loop);
 </script>
 </body>
