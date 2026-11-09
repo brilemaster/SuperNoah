@@ -26,6 +26,11 @@ canvas{display:block;background:#7ec8ff;touch-action:none}
 #top{position:fixed;top:max(8px,env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));z-index:6;display:flex;gap:8px}
 #top button{background:rgba(10,12,40,.55);color:#fff;border:2px solid rgba(255,255,255,.55);border-radius:12px;font-size:20px;padding:5px 9px;min-width:46px}
 #top button.off{opacity:.45}
+#pm{position:fixed;inset:0;z-index:9;display:none;align-items:center;justify-content:center;background:rgba(10,12,40,.65);padding:12px;box-sizing:border-box}
+#pm .hp{background:#fff;border:4px solid #2b2d6e;border-radius:24px;padding:18px 22px;max-width:420px;width:100%;display:flex;flex-direction:column;align-items:center;gap:12px;font-family:"Avenir Next","Trebuchet MS",system-ui}
+#pm h1{margin:0;font:900 38px "Arial Black",system-ui;color:#ffcf3a;-webkit-text-stroke:2px #17142e;text-shadow:0 4px 0 #17142e}
+#pm button{font:900 22px "Arial Black",system-ui;color:#fff;border:3px solid #fff;border-radius:30px;padding:12px 22px;width:100%;max-width:300px;box-shadow:0 4px 0 rgba(0,0,0,.3)}
+#pm .go{background:linear-gradient(#ff8a65,#e0413a)}#pm .home{background:linear-gradient(#9fd8ff,#3d8fd6)}#pm p{margin:0;font:700 15px system-ui;color:#2b2d6e;text-align:center}
 #hof{position:fixed;inset:0;z-index:8;display:none;align-items:center;justify-content:center;background:rgba(10,12,40,.6);padding:12px;box-sizing:border-box;overflow:auto;touch-action:pan-y}
 #hof .hp{background:#fff;border:4px solid #2b2d6e;border-radius:22px;padding:14px 18px;max-width:520px;width:100%;display:flex;flex-direction:column;align-items:center;gap:8px;font-family:"Avenir Next","Trebuchet MS",system-ui;margin:auto}
 #hof h1{margin:0;font:900 30px "Arial Black",system-ui;color:#ffcf3a;-webkit-text-stroke:2px #17142e;text-shadow:0 4px 0 #17142e;text-align:center}
@@ -52,10 +57,11 @@ canvas{display:block;background:#7ec8ff;touch-action:none}
 <div id="wrap"><canvas id="c"></canvas></div>
 <div class="ctl left" id="leftCtl"><div class="btn" data-k="left">◀</div><div class="btn" data-k="up" id="upBtn" style="display:none;background:rgba(142,92,247,.55)">▲</div><div class="btn" data-k="right">▶</div><div class="btn" data-k="down" id="downBtn" style="display:none;background:rgba(142,92,247,.55)">▼</div></div>
 <div class="ctl right"><div class="btn" data-k="laser" id="laserBtn" style="display:none;background:rgba(255,40,90,.55)">◉<small>LASER</small></div><div class="btn" data-k="shell">🐢<small>SPIN</small></div><div class="btn big" data-k="jump">⬆</div></div>
-<div id="top"><button id="voice" aria-label="Read story aloud">🗣️</button><button id="mute" aria-label="Sound on or off">🔊</button></div>
+<div id="top"><button id="homeB" aria-label="Main menu" style="display:none">🏠</button><button id="pauseB" aria-label="Pause" style="display:none">⏸</button><button id="voice" aria-label="Read story aloud">🗣️</button><button id="mute" aria-label="Sound on or off">🔊</button></div>
 <div id="hof"><div class="hp"><h1>🏆 HALL OF HEROES</h1><div id="hsub" style="font:800 16px system-ui;color:#2b2d6e;text-align:center"></div>
 <div id="hform"><input id="hname" maxlength="10" placeholder="Your first name" autocomplete="off"><button id="hsave">Save my stars ⭐</button></div><div id="hmsg"></div>
 <ol id="hlist"></ol><button class="gray" id="hclose">Close</button></div></div>
+<div id="pm"><div class="hp"><h1>⏸ PAUSED</h1><button class="go" id="pmGo">▶ KEEP PLAYING</button><button class="home" id="pmHome">🏠 MAIN MENU</button><p id="pmTip">Your progress is saved at your last checkpoint flag.</p></div></div>
 <div id="rotate">🔄<br>Turn your device sideways<br>to play Super Noah!</div>
 <script>
 'use strict';
@@ -1759,7 +1765,17 @@ function render(){ctx.setTransform(RES,0,0,RES,0,0);
 
 /* ---------------- loop ---------------- */
 let last=performance.now(),acc=0;
-function loop(t){acc+=Math.min(100,t-last);last=t;while(acc>=1000/60){step();acc-=1000/60;}render();requestAnimationFrame(loop);}
+let gamePaused=false;const PLAYISH=['play','clear','oneMore','note','card'];
+function pauseGame(){if(gamePaused)return;gamePaused=true;hush();if(actx&&actx.state==='running')actx.suspend();document.getElementById('pm').style.display='flex';}
+function resumeGame(){gamePaused=false;document.getElementById('pm').style.display='none';for(const k in inp)inp[k]=false;tap=null;if(actx&&!muted)actx.resume();}
+function goHome(){resumeGame();hush();story=null;document.getElementById('hof').style.display='none';if(L){L.call=null;}P.ride=0;P.star=0;setState('title');startSong('title');}
+document.getElementById('pauseB').onclick=e=>{e.stopPropagation();ensureAudio&&ensureAudio();pauseGame();};
+document.getElementById('homeB').onclick=e=>{e.stopPropagation();if(PLAYISH.includes(state))pauseGame();else goHome();};
+document.getElementById('pmGo').onclick=()=>resumeGame();document.getElementById('pmHome').onclick=()=>goHome();
+addEventListener('keydown',e=>{if(e.code==='Escape'||e.code==='KeyP'){if(gamePaused)resumeGame();else if(PLAYISH.includes(state))pauseGame();}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&PLAYISH.includes(state))pauseGame();});
+let topShown='';function updTop(){const k=(PLAYISH.includes(state)?'p':'')+(state!=='title'&&state!=='map'?'h':'');if(k===topShown)return;topShown=k;document.getElementById('pauseB').style.display=k.includes('p')?'':'none';document.getElementById('homeB').style.display=k.includes('h')?'':'none';}
+function loop(t){acc+=Math.min(100,t-last);last=t;while(acc>=1000/60){if(!gamePaused)step();acc-=1000/60;}render();updTop();requestAnimationFrame(loop);}
 requestAnimationFrame(loop);
 </script>
 </body>
