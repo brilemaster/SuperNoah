@@ -12,13 +12,15 @@
 html,body{margin:0;height:100%;background:#14163a;overflow:hidden;position:fixed;inset:0;overscroll-behavior:none;-webkit-text-size-adjust:100%;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
 canvas{display:block;background:#7ec8ff;touch-action:none}
-.ctl{position:fixed;bottom:max(14px,env(safe-area-inset-bottom));display:none;gap:16px;z-index:5}
+.ctl{touch-action:none;position:fixed;bottom:max(14px,env(safe-area-inset-bottom));display:none;gap:16px;z-index:5}
 .ctl.left{left:max(16px,env(safe-area-inset-left))}
 .ctl.right{right:max(16px,env(safe-area-inset-right));align-items:flex-end}
 .btn{width:80px;height:80px;border-radius:50%;background:rgba(20,24,70,.32);border:3px solid rgba(255,255,255,.7);color:#fff;font:900 30px system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;text-shadow:0 2px 3px #0008;touch-action:none;box-shadow:0 4px 10px rgba(0,0,0,.25)}
 .btn small{font-size:12px;letter-spacing:1px;margin-top:-2px}
 .btn.big{width:98px;height:98px;background:rgba(255,200,60,.45)}
 .btn.on{background:rgba(255,255,255,.6);transform:scale(.94)}
+.btn{position:relative}.btn::after{content:'';position:absolute;inset:-14px;border-radius:50%}
+.ctl.left{padding:18px;margin:-18px}
 
 .ctl.left.dpad{display:grid!important;grid-template-columns:repeat(3,auto);grid-template-areas:". up ." "left down right";gap:6px}
 .dpad [data-k=left]{grid-area:left}.dpad [data-k=right]{grid-area:right}.dpad [data-k=up]{grid-area:up}.dpad [data-k=down]{grid-area:down}
@@ -58,10 +60,10 @@ canvas{display:block;background:#7ec8ff;touch-action:none}
 #rotate{position:fixed;inset:0;background:#2b2d6e;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;font:bold 28px system-ui,sans-serif;z-index:10;padding:24px;line-height:1.4}
 @media (orientation:portrait) and (pointer:coarse){#rotate{display:flex}}
 @media (max-height:500px){
-  .btn{width:52px;height:52px;font-size:19px;border-width:2px;background:rgba(20,24,70,.26);border-color:rgba(255,255,255,.55);box-shadow:none}
-  .btn.big{width:58px;height:58px;background:rgba(255,200,60,.28)}
-  .btn[data-k=shell]{width:46px;height:46px;font-size:16px}
-  .btn small{font-size:8px;letter-spacing:.5px}
+  .btn{width:70px;height:70px;font-size:25px;border-width:2.5px;background:rgba(20,24,70,.28);border-color:rgba(255,255,255,.6);box-shadow:none}
+  .btn.big{width:80px;height:80px;background:rgba(255,200,60,.32)}
+  .btn[data-k=shell]{width:62px;height:62px;font-size:21px}
+  .btn small{font-size:10px;letter-spacing:.5px}
   .btn.on{background:rgba(255,255,255,.5)}
   .ctl{gap:8px;bottom:max(5px,env(safe-area-inset-bottom))}
   .ctl.left{left:max(6px,env(safe-area-inset-left))}
@@ -87,7 +89,7 @@ canvas{display:block;background:#7ec8ff;touch-action:none}
 <div id="rotate">🔄<br>Turn your device sideways<br>to play Super Noah!</div>
 <script>
 'use strict';
-const VERSION='3.0';
+const VERSION='3.1';
 /* =========================================================
    SUPER NOAH — Rescue Daddy!   (v2)
    An original platformer made with love for Noah & JoJo.
@@ -101,11 +103,11 @@ function localDB(){const K='superNoahShare_scores',all=()=>{try{return JSON.pars
   return {from(){return {insert(row){const a=all();a.push(Object.assign({},row));try{localStorage.setItem(K,JSON.stringify(a.slice(-300)));}catch(e){}return Promise.resolve({error:null});},
     select(){let rows=all();const q={eq(k,v){rows=rows.filter(r=>r[k]===v);return q;},order(k,o){const up=o&&o.ascending;rows=rows.slice().sort((a,b)=>up?a[k]-b[k]:b[k]-a[k]);return q;},limit(n){return Promise.resolve({data:rows.slice(0,n),error:null});}};return q;}};}};}
 const SUPA_URL='https://zghpmysqcywzzarahras.supabase.co',SUPA_KEY='sb_publishable_AsuLILWamUfqc-B6tPB-4w_lIGlISvv';
-let RES=1;
+let RES=1,PHONE=false,ZM=1;
 let lastFit='';
 function fit(){const vw=Math.round(document.documentElement.clientWidth||innerWidth),vh=Math.round(innerHeight||document.documentElement.clientHeight);
   const key=vw+'x'+vh;if(key===lastFit)return;lastFit=key;
-  W=Math.round(Math.min(1600,Math.max(960,H*vw/vh)));const s=Math.min(vw/W,vh/H);cv.style.width=(W*s)+'px';cv.style.height=(H*s)+'px';
+  W=Math.round(Math.min(1600,Math.max(960,H*vw/vh)));const s=Math.min(vw/W,vh/H);PHONE=H*s<520;cv.style.width=(W*s)+'px';cv.style.height=(H*s)+'px';
   RES=Math.min(2,Math.max(1,s*(window.devicePixelRatio||1)));const cw=Math.round(W*RES),ch=Math.round(H*RES);if(cv.width!==cw)cv.width=cw;if(cv.height!==ch)cv.height=ch;}
 let fitReq=0;function fitSoon(){if(!fitReq)fitReq=requestAnimationFrame(()=>{fitReq=0;fit();});}
 addEventListener('resize',fitSoon);addEventListener('orientationchange',()=>setTimeout(()=>{lastFit='';fit();},300));setInterval(fitSoon,1000);fit();
@@ -146,13 +148,20 @@ function pressed(k){return inp[k]&&!prevInp[k];}
 const isTouch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
 const ctlEls=[...document.querySelectorAll('.ctl')];let ctlShown=false;
 function syncCtl(){const show=isTouch&&state==='play';if(show!==ctlShown){ctlShown=show;ctlEls.forEach(el=>el.style.display=show?'flex':'none');
-  if(!show){for(const k in inp)inp[k]=false;document.querySelectorAll('.btn').forEach(b=>b.classList.remove('on'));}}}
+  if(!show){if(window.__lpClear)__lpClear();for(const k in inp)inp[k]=false;document.querySelectorAll('.btn').forEach(b=>b.classList.remove('on'));}}}
 const downBtn=document.getElementById('downBtn'),upBtn=document.getElementById('upBtn');let downShown=false,upShown=false;
 const laserBtn=document.getElementById('laserBtn');let laserShown=false;
 function syncDown(){const wl=isTouch&&state==='play'&&!!P.laser;if(wl!==laserShown){laserShown=wl;laserBtn.style.display=wl?'flex':'none';if(!wl){inp.laser=false;laserBtn.classList.remove('on');}}
   const fly=state==='play'&&L&&L.def.fly;const want=isTouch&&state==='play'&&!!P.onTube;if(want!==downShown){downShown=want;downBtn.style.display=want?'flex':'none';if(!want){inp.down=false;downBtn.classList.remove('on');}}
   const wu=false;document.getElementById('leftCtl').classList.toggle('dpad',!!wu);if(wu!==upShown){upShown=wu;upBtn.style.display=wu?'flex':'none';if(!wu){inp.up=false;upBtn.classList.remove('on');}}}
-document.querySelectorAll('.btn').forEach(b=>{const k=b.dataset.k;
+{const lc=document.getElementById('leftCtl'),bL=lc.querySelector('[data-k=left]'),bR=lc.querySelector('[data-k=right]'),lp=new Map();
+  const upd=()=>{let l=false,r=false;for(const d of lp.values()){if(d==='left')l=true;else r=true;}inp.left=l;inp.right=r;bL.classList.toggle('on',l);bR.classList.toggle('on',r);};
+  const dir=x=>{const a=bL.getBoundingClientRect(),b=bR.getBoundingClientRect();return x<(a.right+b.left)/2?'left':'right';};
+  lc.addEventListener('pointerdown',e=>{if(e.target.closest('#downBtn,#upBtn'))return;e.preventDefault();try{lc.setPointerCapture(e.pointerId);}catch(_){}lp.set(e.pointerId,dir(e.clientX));upd();});
+  lc.addEventListener('pointermove',e=>{if(!lp.has(e.pointerId))return;e.preventDefault();lp.set(e.pointerId,dir(e.clientX));upd();});
+  ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>lc.addEventListener(ev,e=>{if(lp.delete(e.pointerId))upd();}));
+  window.__lpClear=()=>{lp.clear();};}
+document.querySelectorAll('.btn').forEach(b=>{const k=b.dataset.k;if(k==='left'||k==='right')return;
   const on=e=>{e.preventDefault();if(k==='jump')userGo('key');inp[k]=true;b.classList.add('on');try{b.setPointerCapture(e.pointerId);}catch(_){}};
   const off=e=>{e.preventDefault();inp[k]=false;b.classList.remove('on');};
   b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointercancel',off);b.addEventListener('lostpointercapture',off);
@@ -1195,7 +1204,7 @@ let state='title',stateT=0,frame=0,story=null,lvlIdx=0,L=null,totalStars=0,shake
 const P={x:0,y:0,w:22,h:34,vx:0,vy:0,face:1,onG:false,coy:0,buf:0,jumping:false,hearts:5,inv:0,anim:0,safe:{x:0,fy:0},bump:null,big:false,growT:0,dash:0,dashDir:1};
 const J={x:0,y:0,say:'',sayT:0,idle:0,heartT:0};
 const R={x:0,y:0,w:18,h:30,vx:0,vy:0,onG:false,face:1,anim:0,mode:'walk',sx:0,sy:0,svx:0,dist:0,back:false,rot:0};
-const cam={x:0};
+const cam={x:0,y:0};
 let parts=[];
 function setState(s){state=s;stateT=0;}
 function jojoSay(t,chance){if(chance!==undefined&&Math.random()>chance)return;J.say=hs(t);J.sayT=150;J.idle=0;}
@@ -1246,7 +1255,7 @@ function loadLevel(i){lvlIdx=i;const def=LEVELS[i];const b=def.build();if(EASY&&
   Object.assign(P,{x:5*T+5,y:14*T-P.h,vx:0,vy:0,face:1,hearts:MAXH(),inv:0,jumping:false,buf:0,coy:0,dash:0,growT:0,zone:0,star:0,ride:0,warp:null,onTube:null});
   P.safe={x:P.x,fy:14*T};L.check={x:P.x,fy:14*T};
   Object.assign(R,{x:P.x-34,y:14*T-30,vx:0,vy:0,mode:'walk',face:1});
-  J.x=P.x-40;J.y=P.y-30;J.sayT=0;J.heartT=0;J.cheerT=0;J.hint=null;J.nextCheer=(Math.floor(totalStars/25)+1)*25;cam.x=0;parts=[];P.boost=0;P.gfy=14*T;
+  J.x=P.x-40;J.y=P.y-30;J.sayT=0;J.heartT=0;J.cheerT=0;J.hint=null;J.nextCheer=(Math.floor(totalStars/25)+1)*25;cam.x=0;cam.y=0;parts=[];P.boost=0;P.gfy=14*T;
   if(EASY){let gi=0;L.ents=L.ents.filter(e=>e.t!=='goon'||(gi++%3!==2));for(const e of L.ents){if(e.t==='goon')e.vx*=.3;}if(L.boss){L.boss.hp=2;L.boss.maxhp=2;}}
   if(HARD){const add=[];for(const e of L.ents)if(e.t==='goon'){e.vx=-1;const cx=e.x+46,tx=Math.floor((cx+14)/T),ty=Math.floor((e.y+13)/T);if(!solidAt(tx,ty)&&!solidAt(tx+1,ty)&&solidAt(tx,ty+1))add.push(E('goon',cx,e.y,28,26,{vx:1}));}L.ents.push(...add);if(L.boss){L.boss.hp=5;L.boss.maxhp=5;}placeCoins();}else L.coins=null;}
 
@@ -1408,7 +1417,8 @@ function stepPlay(){
   for(const it of L.items){
     if(it.t==='heart'){it.vy=Math.min((it.vy||0)+.3,6);it.vx=0;moveX(it);moveY(it);}
     if(it.t==='power'||it.t==='super'||it.t==='laser'){if(it.rise>0){it.y-=1;if(--it.rise===0)it.vx=1.3;}else{it.vy=Math.min(it.vy+.4,8);const v=it.vx;moveX(it);if(it.hitW)it.vx=-v;moveY(it);if(it.t==='super'&&it.onG)it.vy=-7;}}
-    if(overlap(P,it)&&!((it.t==='power'||it.t==='super'||it.t==='laser')&&it.rise>10)){it.got=true;
+    const pad=(it.t==='star'||it.t==='coin'||it.t==='heart')?10:0;
+    if(overlap(P,pad?{x:it.x-pad,y:it.y-pad-4,w:it.w+pad*2,h:it.h+pad*2+4}:it)&&!((it.t==='power'||it.t==='super'||it.t==='laser')&&it.rise>10)){it.got=true;
       if(it.t==='coin'){L.coins[it.k]=1;const all=store.get('coins',{});all[lvlIdx]=L.coins;store.set('coins',all);sfx('power');setTimeout(()=>sfx('fanfare'),200);burst(it.x+14,it.y+14,'#ffd23f',18,'star');popText(it.had?'GOLD COIN (again)!':'GOLD COIN!',it.x+14,it.y-10,'#ffd23f');jojoSay('A GOLD COIN! '+L.coins.filter(Boolean).length+' of 3!');}
       else if(it.t==='star'){totalStars++;sfx('star');burst(it.x+10,it.y+10,'#ffe14d',5);if(Math.random()<.12)jojoSay(rand(['Sparkly!','Ooh, pretty!','So many stars!']));}
       else if(it.t==='laser'){if(!P.laser){P.laser=true;sfx('power');popText('LASER GLASSES!',P.x+P.w/2,P.y-14,'#ff5c8a');jojoSay('Pew pew! Laser eyes!');}else{totalStars+=3;sfx('heart');popText('+3',P.x+P.w/2,P.y-14);}}
@@ -1440,8 +1450,10 @@ function stepPlay(){
   if(state!=='play')return;
   if(L.end&&!P.zone&&P.x+P.w/2>L.end.x+36){levelClear();return;}
   updCam();}
-function updCam(snap){const b=L.boss;let ct=P.x+P.w/2-W*.4+(P.dash>0?P.face*90:0);if(b&&b.active)ct=ARENA_L;
-  const z=L.zones[P.zone||0],zw=z.x1-z.x0;ct=zw<=W?z.x0-(W-zw)/2:Math.max(z.x0,Math.min(z.x1-W,ct));cam.x=snap?ct:cam.x+(ct-cam.x)*.15;}
+function updCam(snap){const b=L.boss;const zt=(PHONE&&!(b&&b.active))?1.4:1;ZM=snap?zt:ZM+(zt-ZM)*.06;if(Math.abs(ZM-zt)<.002)ZM=zt;const VW=W/ZM,VH=H/ZM;
+  let ct=P.x+P.w/2-VW*.4+(P.dash>0?P.face*90:0);if(b&&b.active)ct=ARENA_L;
+  const z=L.zones[P.zone||0],zw=z.x1-z.x0;ct=zw<=VW?z.x0-(VW-zw)/2:Math.max(z.x0,Math.min(z.x1-VW,ct));cam.x=snap?ct:cam.x+(ct-cam.x)*.15;
+  const cy=Math.max(0,Math.min(H-VH,P.y+P.h/2-VH*.58));cam.y=snap?cy:cam.y+(cy-cam.y)*.12;if(H-VH<=0)cam.y=0;}
 function startWarp(tb){P.warp={t:0,tb};P.vx=0;P.vy=0;P.dash=0;P.x=tb.x*T+T-P.w/2;sfx('warp');}
 function finishWarp(){const tb=P.warp.tb;P.warp=null;
   if(tb.room){const zi=L.zones.findIndex(z=>z.id===tb.room),z=L.zones[zi];P.zone=zi;P.x=z.entry.x;P.y=z.entry.y;P.vy=0;popText('SECRET ROOM!',P.x+60,P.y+80,'#ff8fd8');jojoSay('Ooh! A secret room!');}
@@ -1879,7 +1891,7 @@ function drawEnemy(e){ctx.save();if(!e.alive){ctx.globalAlpha=1-e.dead/25;}
     case 'drop':ctx.beginPath();ctx.moveTo(cx,e.y);ctx.quadraticCurveTo(cx+6,e.y+10,cx,e.y+14);ctx.quadraticCurveTo(cx-6,e.y+10,cx,e.y);fs('#7fd3ff',1.2);break;}
   ctx.restore();}
 function drawSay(){if(J.sayT<=0)return;ctx.font=`800 17px ${FONT}`;const w=ctx.measureText(J.say).width+24;let bx=J.x-w/2;const by=J.y-70;
-  bx=Math.max(cam.x+6,Math.min(cam.x+W-w-6,bx));ctx.globalAlpha=Math.min(1,J.sayT/15);
+  bx=Math.max(cam.x+6,Math.min(cam.x+W/ZM-w-6,bx));ctx.globalAlpha=Math.min(1,J.sayT/15);
   ctx.beginPath();ctx.moveTo(J.x-6,by+29);ctx.lineTo(J.x,by+40);ctx.lineTo(J.x+6,by+29);ctx.closePath();fs('#fff',2);
   rr(bx,by,w,31,13);fs('#fff',2.5);ctx.fillStyle='#d6336c';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(J.say,bx+w/2,by+16);ctx.globalAlpha=1;}
 function drawParts(){for(const p of parts){ctx.globalAlpha=Math.min(1,p.life/20);
@@ -1910,7 +1922,7 @@ function drawWorld(){const th=L.def.theme;drawBG(th,cam.x,frame);
   if(P.zone&&L.zones[P.zone].lucky){const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'rgba(255,170,220,.6)');g.addColorStop(.5,'rgba(255,240,170,.55)');g.addColorStop(1,'rgba(160,220,255,.6)');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
     for(let i=0;i<16;i++){const x=wrap(i*97+frame*.5,W+40)-20,y=H-wrap(i*61+frame*1.1,H+40);drawHeart(x,y,6+(i%3)*2,'rgba(255,255,255,.75)');}
     txt('✨ SECRET GOODIE ROOM ✨',L.call?(W-Math.min(380,W*.38)-18)/2:W/2,84,24,'#fff','center',OL,6,HEAVY);}
-  ctx.save();const sx=shake>0?(Math.random()-.5)*shake:0,sy=shake>0?(Math.random()-.5)*shake:0;ctx.translate(-Math.round(cam.x)+sx,sy);
+  ctx.save();const sx=shake>0?(Math.random()-.5)*shake:0,sy=shake>0?(Math.random()-.5)*shake:0;ctx.scale(ZM,ZM);ctx.translate(-Math.round(cam.x*ZM)/ZM+sx,-Math.round(cam.y*ZM)/ZM+sy);
   if(th==='castle'||th==='volcano')drawLava();
   if(P.warp)drawHeroP(P.x+P.w/2,P.y+P.h,P.big?1.02:.76,P.face,{});
   drawTiles();
