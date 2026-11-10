@@ -87,13 +87,19 @@ canvas{display:block;background:#7ec8ff;touch-action:none}
 <div id="rotate">🔄<br>Turn your device sideways<br>to play Super Noah!</div>
 <script>
 'use strict';
-const VERSION='2.9';
+const VERSION='3.0';
 /* =========================================================
    SUPER NOAH — Rescue Daddy!   (v2)
    An original platformer made with love for Noah & JoJo.
    ========================================================= */
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
 let W=960;const H=544,T=32,ROWS=17;
+const SHARE=/share\.html$/i.test(location.pathname)||/[?&]share=1/.test(location.search);
+const KP=SHARE?'superNoahShare_':'superNoah_';
+// Share copy: scores stay on this device only (never sent to the family leaderboard)
+function localDB(){const K='superNoahShare_scores',all=()=>{try{return JSON.parse(localStorage.getItem(K))||[];}catch(e){return [];}};
+  return {from(){return {insert(row){const a=all();a.push(Object.assign({},row));try{localStorage.setItem(K,JSON.stringify(a.slice(-300)));}catch(e){}return Promise.resolve({error:null});},
+    select(){let rows=all();const q={eq(k,v){rows=rows.filter(r=>r[k]===v);return q;},order(k,o){const up=o&&o.ascending;rows=rows.slice().sort((a,b)=>up?a[k]-b[k]:b[k]-a[k]);return q;},limit(n){return Promise.resolve({data:rows.slice(0,n),error:null});}};return q;}};}};}
 const SUPA_URL='https://zghpmysqcywzzarahras.supabase.co',SUPA_KEY='sb_publishable_AsuLILWamUfqc-B6tPB-4w_lIGlISvv';
 let RES=1;
 let lastFit='';
@@ -105,13 +111,13 @@ let fitReq=0;function fitSoon(){if(!fitReq)fitReq=requestAnimationFrame(()=>{fit
 addEventListener('resize',fitSoon);addEventListener('orientationchange',()=>setTimeout(()=>{lastFit='';fit();},300));setInterval(fitSoon,1000);fit();
 document.addEventListener('touchmove',e=>{if(!(e.target.closest&&e.target.closest('#hof,#who,#pm')))e.preventDefault();},{passive:false});['gesturestart','gesturechange','dblclick'].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
 
-const PROG=['world','max','check','stars','coins','c2seen','c3seen','hard','easy','hero','hofBest'];let CURP=null;try{CURP=JSON.parse(localStorage.getItem('superNoah_cur'));}catch(e){}
-const skey=k=>'superNoah_'+(CURP&&PROG.includes(k)?'p'+CURP+'_':'')+k;
+const PROG=['world','max','check','stars','coins','c2seen','c3seen','hard','easy','hero','hofBest'];let CURP=null;try{CURP=JSON.parse(localStorage.getItem(KP+'cur'));}catch(e){}
+const skey=k=>KP+''+(CURP&&PROG.includes(k)?'p'+CURP+'_':'')+k;
 const store={get(k,d){try{const v=localStorage.getItem(skey(k));return v===null?d:JSON.parse(v);}catch(e){return d;}},
              set(k,v){try{localStorage.setItem(skey(k),JSON.stringify(v));}catch(e){}}};
-const raw={get(k,d){try{const v=localStorage.getItem('superNoah_'+k);return v===null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem('superNoah_'+k,JSON.stringify(v));}catch(e){}}};
+const raw={get(k,d){try{const v=localStorage.getItem(KP+''+k);return v===null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem(KP+''+k,JSON.stringify(v));}catch(e){}}};
 let PLAYERS=raw.get('players',[]);if(!Array.isArray(PLAYERS))PLAYERS=[];
-function copyLegacy(id){if(raw.get('migrated',false))return;for(const k of PROG){try{const v=localStorage.getItem('superNoah_'+k);if(v!==null&&localStorage.getItem('superNoah_p'+id+'_'+k)===null)localStorage.setItem('superNoah_p'+id+'_'+k,v);}catch(e){}}raw.set('migrated',true);}
+function copyLegacy(id){if(raw.get('migrated',false))return;for(const k of PROG){try{const v=localStorage.getItem(KP+''+k);if(v!==null&&localStorage.getItem(KP+'p'+id+'_'+k)===null)localStorage.setItem(KP+'p'+id+'_'+k,v);}catch(e){}}raw.set('migrated',true);}
 {const old=raw.get('pname','');if(!PLAYERS.length&&old){const id=1;PLAYERS=[{id,name:old}];copyLegacy(id);raw.set('players',PLAYERS);CURP=id;raw.set('cur',id);}}
 if(CURP&&!PLAYERS.some(p=>p.id===CURP))CURP=null;
 
@@ -1648,7 +1654,7 @@ function drawMap(){drawBG('meadow',0,0);rect(0,0,W,H,'rgba(255,248,225,.3)');
 const inR=(p,r)=>r&&p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+(r.hh||r.h);
 const RACE_R={x:14,y:46,w:236,h:100},HOF_R={x:14,y:120,w:170,h:42};
 let sbx=null,hofTop=null,hofScore=null;
-function sbc(){if(!sbx&&typeof supabase!=='undefined'){try{sbx=supabase.createClient(SUPA_URL,SUPA_KEY);}catch(e){}}return sbx;}
+function sbc(){if(SHARE)return sbx||(sbx=localDB());if(!sbx&&typeof supabase!=='undefined'){try{sbx=supabase.createClient(SUPA_URL,SUPA_KEY);}catch(e){}}return sbx;}
 async function loadHof(){const c=sbc();if(!c)return null;try{const {data,error}=await c.from('scores').select('name,score').eq('game','noah').order('score',{ascending:false}).limit(80);if(error)return null;const seen=new Set(),out=[];for(const r of data||[]){const k=(r.name||'').trim().toLowerCase();if(seen.has(k))continue;seen.add(k);out.push(r);if(out.length>=10)break;}hofTop=out;return out;}catch(e){return null;}}
 function hofEl(id){return document.getElementById(id);}
 async function openHof(score){hofScore=score;const box=hofEl('hof');box.style.display='flex';hofEl('hwho').textContent=PNAME?`Playing as ${PNAME}. Switch player 👤`:'Pick a player 👤';hofEl('hmsg').textContent='';
@@ -2256,13 +2262,13 @@ function pauseGame(kind){if(gamePaused)return;gamePaused=true;const brk=kind==='
 function resumeGame(){gamePaused=false;document.getElementById('pm').style.display='none';for(const k in inp)inp[k]=false;tap=null;if(actx&&!muted)actx.resume();}
 function goHome(){resumeGame();hush();story=null;document.getElementById('hof').style.display='none';if(L){L.call=null;}P.ride=0;P.star=0;setState('title');if(themeFail)startSong('title');else stopSong();}
 let whoNext=null;const $w=id=>document.getElementById(id);const AVC=['#e53935','#ff3d9a','#1e88e5','#43a047','#8e24aa','#fb8c00','#00897b','#5d4037'];
-function pStat(id){const g=k=>{try{return JSON.parse(localStorage.getItem('superNoah_p'+id+'_'+k));}catch(e){return null;}};const w=g('world')||1,st=g('stars')||0;return `⭐ ${st}  ·  ${w>5?'Ch.2 W'+(w-5):'World '+w}`;}
+function pStat(id){const g=k=>{try{return JSON.parse(localStorage.getItem(KP+'p'+id+'_'+k));}catch(e){return null;}};const w=g('world')||1,st=g('stars')||0;return `⭐ ${st}  ·  ${w>5?'Ch.2 W'+(w-5):'World '+w}`;}
 function switchPlayer(id){CURP=id;raw.set('cur',id);PNAME=(PLAYERS.find(p=>p.id===id)||{}).name||'';savedWorld=store.get('world',1);maxWorld=Math.max(store.get('max',1),savedWorld);totalStars=store.get('stars',0);raw.set('rname',PNAME);HARD=!!store.get('hard',false);EASY=!!store.get('easy',false);HERO=store.get('hero','noah')==='jojo'?'jojo':'noah';updShellBtn();}
 function renderWho(){const pl=$w('plist');pl.innerHTML='';PLAYERS.forEach((p,i)=>{const d=document.createElement('div');d.className='pl';
     d.innerHTML=`<button class="pb${p.id===CURP?' on':''}"><span class="av" style="background:${AVC[i%AVC.length]}">${p.name.charAt(0)}</span><span>${p.name}<small>${pStat(p.id)}</small></span></button><button class="pdel" aria-label="Remove">✕</button>`;
     d.querySelector('.pb').onclick=()=>pickPlayer(p.id);
     d.querySelector('.pdel').onclick=()=>{d.innerHTML=`<div class="ask">Remove ${p.name}? <button class="yes">Yes</button><button class="no">No</button></div>`;
-      d.querySelector('.yes').onclick=()=>{PLAYERS=PLAYERS.filter(q=>q.id!==p.id);raw.set('players',PLAYERS);for(const k of PROG){try{localStorage.removeItem('superNoah_p'+p.id+'_'+k);}catch(e){}}if(CURP===p.id){CURP=null;raw.set('cur',null);PNAME='';}renderWho();};
+      d.querySelector('.yes').onclick=()=>{PLAYERS=PLAYERS.filter(q=>q.id!==p.id);raw.set('players',PLAYERS);for(const k of PROG){try{localStorage.removeItem(KP+'p'+p.id+'_'+k);}catch(e){}}if(CURP===p.id){CURP=null;raw.set('cur',null);PNAME='';}renderWho();};
       d.querySelector('.no').onclick=()=>renderWho();};
     pl.appendChild(d);});
   const none=!PLAYERS.length;$w('whoNew').style.display=none?'flex':'none';$w('whoAdd').style.display=none||PLAYERS.length>=8?'none':'';}
@@ -2282,7 +2288,7 @@ let topShown='';function updTop(){const k=(PLAYISH.includes(state)?'p':'')+(stat
 // ===== Bonus games open on top of Super Noah, so the theme song can keep playing =====
 let bonusEl=null,bonusSt='menu',bonusMuted=false;
 function openBonus(url){if(bonusEl)return;hush();bonusSt='menu';bonusMuted=false;bonusEl=document.createElement('iframe');
-  bonusEl.src=url+'?embed=1&v='+VERSION;bonusEl.setAttribute('allow','autoplay; clipboard-write');bonusEl.title='Bonus game';
+  bonusEl.src=url+'?embed=1&v='+VERSION+(SHARE?'&share=1':'');bonusEl.setAttribute('allow','autoplay; clipboard-write');bonusEl.title='Bonus game';
   bonusEl.style.cssText='position:fixed;inset:0;width:100%;height:100%;border:0;z-index:99999;background:#1a1b3a;';document.body.appendChild(bonusEl);
   setTimeout(()=>{try{bonusEl&&bonusEl.focus();}catch(e){}},300);}
 function closeBonus(){if(!bonusEl)return;try{bonusEl.remove();}catch(e){}bonusEl=null;bonusMuted=false;tap=null;setState('title');}

@@ -109,6 +109,12 @@ li{padding:6px 10px;border-radius:10px;background:#eef3ff;margin:4px 0}li.mine{b
 <script>
 'use strict';
 /* ====== ONLINE SETUP: paste your Supabase Project URL and publishable key here ====== */
+const SHARE=/share\.html$/i.test(location.pathname)||/[?&]share=1/.test(location.search);
+const KP=SHARE?'superNoahShare_':'superNoah_';
+// Share copy: scores stay on this device only (never sent to the family leaderboard)
+function localDB(){const K='superNoahShare_scores',all=()=>{try{return JSON.parse(localStorage.getItem(K))||[];}catch(e){return [];}};
+  return {from(){return {insert(row){const a=all();a.push(Object.assign({},row));try{localStorage.setItem(K,JSON.stringify(a.slice(-300)));}catch(e){}return Promise.resolve({error:null});},
+    select(){let rows=all();const q={eq(k,v){rows=rows.filter(r=>r[k]===v);return q;},order(k,o){const up=o&&o.ascending;rows=rows.slice().sort((a,b)=>up?a[k]-b[k]:b[k]-a[k]);return q;},limit(n){return Promise.resolve({data:rows.slice(0,n),error:null});}};return q;}};}};}
 const SUPA_URL='https://zghpmysqcywzzarahras.supabase.co';
 const SUPA_KEY='sb_publishable_AsuLILWamUfqc-B6tPB-4w_lIGlISvv';
 /* ================================================================================== */
@@ -122,7 +128,7 @@ function fit(){const vw=Math.round(document.documentElement.clientWidth||innerWi
 let fitReq=0;function fitSoon(){if(!fitReq)fitReq=requestAnimationFrame(()=>{fitReq=0;fit();});}
 addEventListener('resize',fitSoon);addEventListener('orientationchange',()=>setTimeout(()=>{lastFit='';fit();},300));setInterval(fitSoon,1000);fit();
 ['gesturestart','gesturechange'].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
-const store={get(k,d){try{const v=localStorage.getItem('superNoah_'+k);return v===null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem('superNoah_'+k,JSON.stringify(v));}catch(e){}}};
+const store={get(k,d){try{const v=localStorage.getItem(KP+''+k);return v===null?d:JSON.parse(v);}catch(e){return d;}},set(k,v){try{localStorage.setItem(KP+''+k,JSON.stringify(v));}catch(e){}}};
 const NOAH_CAPE='#e53935',JOJO_CAPE='#ff3d9a';const cape=()=>NOAH_CAPE;
 const SKIN='#e0a67c',HAIR='#3d2414',HAIR2='#5a3418',OL='#17142e',SUIT='#26346a',SUIT_D='#1a2348',SKINT='#5cbf8f';
 const FONT='"Avenir Next","Nunito","Trebuchet MS",system-ui,sans-serif',HEAVY='"Arial Black","Avenir Next","Helvetica Neue",system-ui,sans-serif',HAND='"Chalkboard SE","Marker Felt","Comic Sans MS","Bradley Hand",cursive';
@@ -1066,7 +1072,7 @@ function say(t){for(const id of ['netmsg','fmsg'])$(id).textContent=t||'';}
 function fmtT(t){if(t==null)return '';const s=t/10,m=Math.floor(s/60);return m+':'+(s%60).toFixed(1).padStart(4,'0');}
 /* ---- leaderboard (Supabase table "scores") ---- */
 let sb=null,recs={};
-function sbc(){if(!sb&&SUPA_URL&&SUPA_KEY&&typeof supabase!=='undefined'){try{sb=supabase.createClient(SUPA_URL,SUPA_KEY);}catch(e){}}return sb;}
+function sbc(){if(SHARE)return sb||(sb=localDB());if(!sb&&SUPA_URL&&SUPA_KEY&&typeof supabase!=='undefined'){try{sb=supabase.createClient(SUPA_URL,SUPA_KEY);}catch(e){}}return sb;}
 async function topTimes(track,n){const c=sbc();if(!c)return null;try{const {data,error}=await c.from('scores').select('name,racer,score').eq('game','rally').eq('track',track).order('score',{ascending:true}).limit(n||10);return error?null:data;}catch(e){return null;}}
 async function saveTime(track,tenths){const c=sbc();if(!c||!myName)return false;try{const {error}=await c.from('scores').insert({game:'rally',track,name:myName,racer:myChar,score:tenths});return !error;}catch(e){return false;}}
 async function loadRecs(){for(const t of TKEYS){const d=await topTimes(t,1);recs[t]=d&&d[0]?d[0]:null;}buildPickers();}
