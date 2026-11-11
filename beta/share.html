@@ -89,7 +89,7 @@ canvas{display:block;background:#7ec8ff;touch-action:none}
 <div id="rotate">🔄<br>Turn your device sideways<br>to play Super Noah!</div>
 <script>
 'use strict';
-const VERSION='3.2';
+const VERSION='3.3';
 /* =========================================================
    SUPER NOAH — Rescue Daddy!   (v2)
    An original platformer made with love for Noah & JoJo.
@@ -103,11 +103,11 @@ function localDB(){const K='superNoahShare_scores',all=()=>{try{return JSON.pars
   return {from(){return {insert(row){const a=all();a.push(Object.assign({},row));try{localStorage.setItem(K,JSON.stringify(a.slice(-300)));}catch(e){}return Promise.resolve({error:null});},
     select(){let rows=all();const q={eq(k,v){rows=rows.filter(r=>r[k]===v);return q;},order(k,o){const up=o&&o.ascending;rows=rows.slice().sort((a,b)=>up?a[k]-b[k]:b[k]-a[k]);return q;},limit(n){return Promise.resolve({data:rows.slice(0,n),error:null});}};return q;}};}};}
 const SUPA_URL='https://zghpmysqcywzzarahras.supabase.co',SUPA_KEY='sb_publishable_AsuLILWamUfqc-B6tPB-4w_lIGlISvv';
-let RES=1,PHONE=false,ZM=1;
+let RES=1,PHONE=false,ZM=1,PZ=1.4,BZ=1;
 let lastFit='';
 function fit(){const vw=Math.round(document.documentElement.clientWidth||innerWidth),vh=Math.round(innerHeight||document.documentElement.clientHeight);
   const key=vw+'x'+vh;if(key===lastFit)return;lastFit=key;
-  W=Math.round(Math.min(1600,Math.max(960,H*vw/vh)));const s=Math.min(vw/W,vh/H);PHONE=H*s<520;cv.style.width=(W*s)+'px';cv.style.height=(H*s)+'px';
+  W=Math.round(Math.min(1600,Math.max(960,H*vw/vh)));const s=Math.min(vw/W,vh/H);PHONE=H*s<520;PZ=PHONE?Math.max(1.4,Math.min(2.2,.78/s)):1;BZ=PHONE?Math.max(1,Math.min(1.25,W/1100)):1;cv.style.width=(W*s)+'px';cv.style.height=(H*s)+'px';
   RES=Math.min(2,Math.max(1,s*(window.devicePixelRatio||1)));const cw=Math.round(W*RES),ch=Math.round(H*RES);if(cv.width!==cw)cv.width=cw;if(cv.height!==ch)cv.height=ch;}
 let fitReq=0;function fitSoon(){if(!fitReq)fitReq=requestAnimationFrame(()=>{fitReq=0;fit();});}
 addEventListener('resize',fitSoon);addEventListener('orientationchange',()=>setTimeout(()=>{lastFit='';fit();},300));setInterval(fitSoon,1000);fit();
@@ -1679,7 +1679,7 @@ function stepPlay(){
   if(state!=='play')return;
   if(L.end&&!P.zone&&P.x+P.w/2>L.end.x+36){levelClear();return;}
   updCam();}
-function updCam(snap){const b=L.boss;const zt=(PHONE&&!(b&&b.active))?1.4:1;ZM=snap?zt:ZM+(zt-ZM)*.06;if(Math.abs(ZM-zt)<.002)ZM=zt;const VW=W/ZM,VH=H/ZM;
+function updCam(snap){const b=L.boss;const zt=b&&b.active?BZ:PZ;ZM=snap?zt:ZM+(zt-ZM)*.06;if(Math.abs(ZM-zt)<.002)ZM=zt;const VW=W/ZM,VH=H/ZM;
   let ct=P.x+P.w/2-VW*.4+(P.dash>0?P.face*90:0);if(b&&b.active)ct=ARENA_L;
   const z=L.zones[P.zone||0],zw=z.x1-z.x0;ct=zw<=VW?z.x0-(VW-zw)/2:Math.max(z.x0,Math.min(z.x1-VW,ct));cam.x=snap?ct:cam.x+(ct-cam.x)*.15;
   const cy=Math.max(0,Math.min(H-VH,P.y+P.h/2-VH*.58));cam.y=snap?cy:cam.y+(cy-cam.y)*.12;if(H-VH<=0)cam.y=0;}
