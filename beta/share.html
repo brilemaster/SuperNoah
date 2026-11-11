@@ -89,7 +89,7 @@ canvas{display:block;background:#7ec8ff;touch-action:none}
 <div id="rotate">🔄<br>Turn your device sideways<br>to play Super Noah!</div>
 <script>
 'use strict';
-const VERSION='3.4';
+const VERSION='3.5';
 /* =========================================================
    SUPER NOAH — Rescue Daddy!   (v2)
    An original platformer made with love for Noah & JoJo.
@@ -167,6 +167,8 @@ document.querySelectorAll('.btn').forEach(b=>{const k=b.dataset.k;if(k==='left'|
   const off=e=>{e.preventDefault();inp[k]=false;b.classList.remove('on');};
   b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointercancel',off);b.addEventListener('lostpointercapture',off);
   b.addEventListener('contextmenu',e=>e.preventDefault());});
+addEventListener('touchend',e=>{if(e.touches&&e.touches.length===0){if(window.__lpClear)__lpClear();for(const k in inp)inp[k]=false;document.querySelectorAll('.btn.on').forEach(b=>b.classList.remove('on'));}},{capture:true,passive:true});
+addEventListener('touchcancel',e=>{if(e.touches&&e.touches.length===0){if(window.__lpClear)__lpClear();for(const k in inp)inp[k]=false;document.querySelectorAll('.btn.on').forEach(b=>b.classList.remove('on'));}},{capture:true,passive:true});
 let tap=null;
 cv.addEventListener('pointerdown',e=>{e.preventDefault();const r=cv.getBoundingClientRect();tap={x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height};userGo('tap');});
 const anyGo=()=>pressed('jump')||pressed('ok')||!!tap;
@@ -1493,7 +1495,7 @@ function loadLevel(i){lvlIdx=i;const def=LEVELS[i];setArena(def.arena||152);cons
       case 'boss':L.boss={x:px,y:py,w:96,h:72,hp:3,maxhp:3,st:'wait',t:0,dir:-1,inv:0,active:false,started:false,tx:0};break;}}
   if(L.boss&&def.boss==='dino'){Object.assign(L.boss,{w:100,h:104,x:ARENA_L+14*T,y:GROUND_Y-104,dir:-1});}
   P.h=P.big?50:34;P.w=P.big?24:22;
-  Object.assign(P,{vine:null,vineCd:0,x:5*T+5,y:14*T-P.h,vx:0,vy:0,face:1,hearts:MAXH(),inv:0,jumping:false,buf:0,coy:0,dash:0,growT:0,zone:0,star:0,ride:0,warp:null,onTube:null});
+  Object.assign(P,{vine:null,vineCd:0,hold:0,x:5*T+5,y:14*T-P.h,vx:0,vy:0,face:1,hearts:MAXH(),inv:0,jumping:false,buf:0,coy:0,dash:0,growT:0,zone:0,star:0,ride:0,warp:null,onTube:null});
   P.safe={x:P.x,fy:14*T};L.check={x:P.x,fy:14*T};
   Object.assign(R,{x:P.x-34,y:14*T-30,vx:0,vy:0,mode:'walk',face:1});
   J.x=P.x-40;J.y=P.y-30;J.sayT=0;J.heartT=0;J.cheerT=0;J.hint=null;J.nextCheer=(Math.floor(totalStars/25)+1)*25;cam.x=0;cam.y=0;parts=[];P.boost=0;P.gfy=14*T;
@@ -1521,11 +1523,11 @@ function hurt(srcX,isNut){if(P.inv>0||P.star>0||P.ride>0||state!=='play')return;
   P.hearts--;P.inv=130;sfx('hurt');
   if(P.hearts<=0){oneMore();return;}jojoSay(isNut?'No nuts for Noah!':rand(OUCH));}
 function oneMore(){P.hearts=0;setState('oneMore');sfx('bubble');}
-function respawn(){if(P.big)setBig(false);P.laser=false;P.ride=0;P.vine=null;P.hearts=MAXH();P.x=L.check.x;P.y=L.check.fy-P.h;P.vx=P.vy=0;P.inv=130;R.mode='walk';R.x=P.x-30;R.y=L.check.fy-R.h;
+function respawn(){if(P.big)setBig(false);P.laser=false;P.ride=0;P.vine=null;P.hold=0;P.hearts=MAXH();P.x=L.check.x;P.y=L.check.fy-P.h;P.vx=P.vy=0;P.inv=130;R.mode='walk';R.x=P.x-30;R.y=L.check.fy-R.h;
   if(L.boss&&L.boss.active){L.ents=L.ents.filter(e=>e.t!=='drop'&&e.t!=='wave');if(L.boss.st==='swoop'||L.boss.st==='tired'||L.boss.st==='land'||L.boss.st==='spin'){L.boss.st='rise';L.boss.t=0;}}
   J.x=P.x-40;J.y=P.y-30;jojoSay('One more try! You can do it!');setState('play');}
 function fallPit(){{const cx=P.x+P.w/2,lk=!P.zone&&L.lucky.find(l=>cx>=l.x1*T-10&&cx<=(l.x2+1)*T+10);if(lk){enterLucky(lk);return;}}
-sfx('bubble');P.x=P.safe.x;P.y=P.safe.fy-P.h;P.vx=P.vy=0;P.inv=100;bubbleFx=60;P.dash=0;jojoSay('I got you, Noah!');}
+sfx('bubble');P.x=P.safe.x;P.y=P.safe.fy-P.h;P.vx=P.vy=0;P.inv=100;bubbleFx=60;P.dash=0;jojoSay('I got you, Noah!');if(JG())safeSpot();}
 function killEnemy(e){e.alive=false;e.dead=0;burst(e.x+e.w/2,e.y+e.h/2,'#fff',8);}
 function hitBoss(){const b=L.boss;if(b.inv>0||b.st==='beaten')return;b.hp--;b.inv=60;sfx('boss');shake=12;burst(b.x+48,b.y+30,'#ffe14d',20,'star');
   if(b.hp<=0){b.st='beaten';b.t=0;stopSong();sfx('fanfare');setTimeout(()=>startSong('victory'),1300);jojoSay('NOAH DID IT!!');L.ents.forEach(e=>{if(e.alive)killEnemy(e);});
@@ -1566,6 +1568,7 @@ function startDash(d){if(EASY)return;P.dash=55;P.dashDir=d;P.face=d;sfx('dash');
 let ARENA_L=152*T,ARENA_R=181*T,OWL_PL=ARENA_L+70,OWL_PR=ARENA_R-330;const GROUND_Y=14*T,OWL_PY=96;
 function setArena(t){ARENA_L=t*T;ARENA_R=(t+29)*T;OWL_PL=ARENA_L+70;OWL_PR=ARENA_R-330;MAG_SPOTS=[ARENA_L+90,ARENA_L+380,ARENA_L+640];}
 function stepPlay(){
+  if(P.hold>0){P.hold--;P.vx=0;P.vy=0;P.dash=0;updCam();return;}
   if(P.warp){P.warp.t++;P.y+=1.4;if(P.warp.t>=30)finishWarp();updCam();return;}
   const goL=inp.left&&!inp.right,goR=inp.right&&!inp.left;
   if(pressed('right')){if(frame-lastR<18)startDash(1);lastR=frame;}
@@ -1737,6 +1740,9 @@ function stepTruupa(){
 let MAG_SPOTS=[ARENA_L+90,ARENA_L+380,ARENA_L+640];
 /* ---------------- Chapter 4: swinging vines & Rey Rugido ---------------- */
 const JG=()=>!!(L&&L.def.jungle);
+function safeSpot(){P.vine=null;P.hold=45;const fy=Math.floor((P.y+P.h+2)/T),ok=tx=>{const c=tileAt(tx,fy);return (solidC(c)||c==='-')&&!solidC(tileAt(tx,fy-1));};
+  let best=null;for(const d of [0,-1,1,-2,2,-3,3,-4,4]){const nx=P.x+d*T,a=Math.floor((nx-T)/T),z=Math.floor((nx+P.w+T)/T);let good=true;for(let tx=a;tx<=z;tx++)if(!ok(tx)){good=false;break;}if(good){best=nx;break;}}
+  if(best!==null){P.x=best;P.safe={x:best,fy:P.safe.fy};}R.mode='walk';R.x=P.x-30;R.y=P.y+P.h-R.h;}
 function stepVines(){for(const v of L.vines){
   if(P.vine===v){v.w+=-(.55/v.len)*Math.sin(v.a);v.w*=.997;v.a+=v.w;if(Math.abs(v.a)>1.3){v.a=Math.sign(v.a)*1.3;v.w*=-.3;}v.ph=Math.asin(Math.max(-1,Math.min(1,v.a/v.A)));if(v.w<0)v.ph=Math.PI-v.ph;}
   else{v.ph+=v.om;const tgt=v.A*Math.sin(v.ph),pa=v.a;v.a+=(tgt-v.a)*.06;v.w=v.a-pa;}}
