@@ -89,7 +89,7 @@ canvas{display:block;background:#7ec8ff;touch-action:none}
 <div id="rotate">🔄<br>Turn your device sideways<br>to play Super Noah!</div>
 <script>
 'use strict';
-const VERSION='3.10';
+const VERSION='3.11';
 /* =========================================================
    SUPER NOAH — Rescue Daddy!   (v2)
    An original platformer made with love for Noah & JoJo.
@@ -2085,7 +2085,7 @@ function stepPlay(){
   if(P.boost>0)P.boost--;const dashing=P.dash>0;const rdir=goR?1:goL?-1:0;if(rdir&&rdir===P.rdir&&!P.hitW)P.runT++;else{if(P.runT>=RUN_T&&rdir===-P.rdir&&P.onG)dustPuff(P.x+P.w/2,P.y+P.h,3);P.runT=rdir?1:0;}P.rdir=rdir;
   const sup=P.runT>=RUN_T&&!L.def.fly&&!L.def.swim&&!(P.ride>0);if(P.runT===RUN_T&&sup){sfx('zoom');popText('ZOOM!',P.x+P.w/2,P.y-14,'#7fe3ff');if(!L.zoomSaid&&lvlIdx<3){L.zoomSaid=1;jojoSay('SUPER SPEED! Keep holding the arrow!');}}
   if(P.onG&&P.runT===2)dustPuff(P.x+P.w/2-rdir*8,P.y+P.h,2);if(sup&&P.onG&&frame%5===0)dustPuff(P.x+P.w/2-rdir*12,P.y+P.h,1);
-  let acc=dashing?1.2:(P.onG?(L.def.ice?.3:.7):.45);if(sup&&!dashing)acc*=.6;const max=dashing?7.4:(P.boost>0&&!sup?5.6:(L.def.fly||P.ride>0?4.6:(L.def.swim?3.6:(sup?6.4:4.4))))*(EASY?.45:1);if(EASY)acc*=.35;
+  let acc=dashing?1.2:(P.onG?(L.def.ice?.3:.7):.45);if(sup&&!dashing)acc*=.6;const max=dashing?7.4:(P.boost>0&&!sup?5.6:(L.def.fly||P.ride>0?4.6:(L.def.swim?3.6:(sup?6.8:4.8))))*(EASY?.45:1);if(EASY)acc*=.35;
   if(goL){P.face=-1;P.vx=P.vx<-max?Math.min(-max,P.vx*.93):Math.max(P.vx-acc,-max);}
   else if(goR){P.face=1;P.vx=P.vx>max?Math.max(max,P.vx*.93):Math.min(P.vx+acc,max);}
   else{P.vx*=P.onG?(L.def.ice?.965:.7):(L.def.swim?.9:.94);if(Math.abs(P.vx)<.08)P.vx=0;}
@@ -2098,10 +2098,10 @@ function stepPlay(){
   else if(L.def.swim){const up=inp.jump||inp.up;if(pressed('jump'))P.vy=Math.min(P.vy,-3.2);
     if(up)P.vy=Math.max(P.vy-.42,-3.8);else if(inp.down)P.vy=Math.min(P.vy+.4,3.6);else P.vy=Math.min(P.vy+.14,1.8);P.jumping=false;P.buf=0;
     if(frame%5===0&&(Math.abs(P.vx)>.5||Math.abs(P.vy)>.6||frame%20===0))parts.push({kind:'bub',x:P.x+P.w/2+P.face*12,y:P.y+10,vx:-P.face*.4,vy:-1.1,life:34,r:2+Math.random()*2.2});}
-  else{const lg=L.def.lowg;if(P.buf>0&&P.coy>0){const rb=Math.max(0,Math.abs(P.vx)-(EASY?1.98:4.4))*(EASY?.6:.4);P.vy=(EASY?-13.4:-13)*(lg?.86:1)-rb;P.buf=0;P.coy=0;P.jumping=true;P.st=7;sfx('jump');dustPuff(P.x+P.w/2,P.y+P.h,2);if(rb>.3)popText('WHEE!',P.x+P.w/2,P.y-10,'#ffe14d');}
+  else{const lg=L.def.lowg;if(P.buf>0&&P.coy>0){const rb=Math.max(0,Math.abs(P.vx)-(EASY?2.16:4.8))*(EASY?.6:.46);P.vy=lg?-12.5*.86:(EASY?-13.4:-15)-rb;P.buf=0;P.coy=0;P.jumping=true;P.jarc=!lg&&!EASY;P.st=7;sfx('jump');dustPuff(P.x+P.w/2,P.y+P.h,2);if(rb>.3)popText('WHEE!',P.x+P.w/2,P.y-10,'#ffe14d');}
   if(P.jumping&&!inp.jump&&P.vy<-4)P.vy=-4;
   if(P.vy>=0)P.jumping=false;
-  P.vy=Math.min(P.vy+(lg?.55*.58:EASY?(P.vy>0?.38:.55):(P.vy>0?.72:.58)),lg?6.5:EASY?8:13);if(lg&&!P.onG&&frame%9===0)parts.push({kind:'bub',x:P.x+P.w/2,y:P.y+P.h,vx:0,vy:.3,life:20,r:1.5});}
+  if((P.onG&&P.vy>=0)||(P.jarc&&P.jexp!==undefined&&P.vy<P.jexp-.5&&!P.jumping))P.jarc=false;P.vy=Math.min(P.vy+(lg?.55*.58:EASY?(P.vy>0?.38:.55):P.jarc?(P.vy>0?.98:.78):(P.vy>0?.8:.58)),lg?6.5:EASY?8:15);P.jexp=P.vy;if(lg&&!P.onG&&frame%9===0)parts.push({kind:'bub',x:P.x+P.w/2,y:P.y+P.h,vx:0,vy:.3,life:20,r:1.5});}
   const wasG=P.onG,vy0=P.vy;if(P.vine)vineHold();else{moveX(P);moveY(P);}
   if(!wasG&&P.onG&&vy0>4&&!L.def.swim&&!L.def.fly){P.sq=8;dustPuff(P.x+P.w/2,P.y+P.h,vy0>9?3:2);}if(P.sq>0)P.sq--;if(P.st>0)P.st--;
   stepVines();if(FEAT())stepFeat();
@@ -2262,7 +2262,7 @@ function stepVines(){for(const v of L.vines){
   else{v.ph+=v.om;const tgt=v.A*Math.sin(v.ph),pa=v.a;v.a+=(tgt-v.a)*.06;v.w=v.a-pa;}}
   if(P.vineCd>0)P.vineCd--;
   if(P.vine||P.onG||P.vineCd>0||P.warp||P.zone)return;
-  const hx=P.x+P.w/2,hy=P.y+8,m=EASY?24:12,box={x:P.x-m,y:P.y-m,w:P.w+m*2,h:P.h*.65+m};
+  const hx=P.x+P.w/2,hy=P.y+8,m=EASY?32:30,box={x:P.x-m,y:P.y-m,w:P.w+m*2,h:P.h*.65+m};
   for(const v of L.vines){if(Math.abs(hx-v.ax)>v.len+60)continue;
     for(let t=.3;t<=1.001;t+=.05){const px=v.ax+Math.sin(v.a)*v.len*t,py=v.ay+Math.cos(v.a)*v.len*t;
       if(px>=box.x&&px<=box.x+box.w&&py>=box.y&&py<=box.y+box.h){P.vine=v;P.vt=Math.max(.45,t);v.w+=P.vx/(v.len*P.vt)*.45;P.dash=0;sfx('boing');popText('SWING!',hx,hy-30,'#7be38b');
